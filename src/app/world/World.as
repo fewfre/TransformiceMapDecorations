@@ -39,10 +39,6 @@ package app.world
 		internal var linkTray		: LinkTray;
 		internal var _langScreen	: LangScreen;
 
-		internal var button_hand	: PushButton;
-		internal var button_back	: PushButton;
-		internal var button_backHand: PushButton;
-
 		internal var currentlyColoringType:String="";
 		internal var configCurrentlyColoringType:String;
 		
@@ -90,14 +86,6 @@ package app.world
 			this.shopTabs = addChild(new ShopTabContainer({ x:375, y:10, width:70, height:ConstantsApp.APP_HEIGHT,
 				tabs:[
 					{ text:"tab_box_small", event:ITEM.BOX_SMALL },
-					{ text:"tab_box_large", event:ITEM.BOX_LARGE },
-					{ text:"tab_plank_small", event:ITEM.PLANK_SMALL },
-					{ text:"tab_plank_large", event:ITEM.PLANK_LARGE },
-					{ text:"tab_ball", event:ITEM.BALL },
-					{ text:"tab_trampoline", event:ITEM.TRAMPOLINE },
-					{ text:"tab_anvil", event:ITEM.ANVIL },
-					{ text:"tab_cannonball", event:ITEM.CANNONBALL },
-					{ text:"tab_balloon", event:ITEM.BALLOON },
 				]
 			})) as ShopTabContainer;
 			this.shopTabs.addEventListener(ShopTabContainer.EVENT_SHOP_TAB_CLICKED, _onTabClicked);
@@ -105,7 +93,7 @@ package app.world
 			// Toolbox
 			_toolbox = addChild(new Toolbox({
 				x:188, y:28, character:character,
-				onSave:_onSaveClicked, /*onAnimate:_onPlayerAnimationToggle,*/ /*onRandomize:_onRandomizeDesignClicked,*/
+				onSave:_onSaveClicked, onAnimate:_onPlayerAnimationToggle, /*onRandomize:_onRandomizeDesignClicked,*/
 				onShare:_onShareButtonClicked, onScale:_onScaleSliderChange
 			})) as Toolbox;
 			
@@ -137,7 +125,7 @@ package app.world
 			tPane.addEventListener(ColorPickerTabPane.EVENT_EXIT, _onColorFinderBackClicked);
 
 			// Create the panes
-			var tTypes = [ ITEM.BOX_SMALL, ITEM.BOX_LARGE, ITEM.PLANK_SMALL, ITEM.PLANK_LARGE, ITEM.BALL, ITEM.TRAMPOLINE, ITEM.ANVIL, ITEM.CANNONBALL, ITEM.BALLOON ], tData:ItemData, tType:String;
+			var tTypes = [ ITEM.BOX_SMALL ], tData:ItemData, tType:String;
 			for(var i:int = 0; i < tTypes.length; i++) { tType = tTypes[i];
 				tPane = _paneManager.addPane(tType, _setupPane(tType));
 				// Based on what the character is wearing at start, toggle on the appropriate buttons.
@@ -209,17 +197,18 @@ package app.world
 		}
 
 		private function _onPlayerAnimationToggle(pEvent:Event):void {
-			character.animatePose = !character.animatePose;
-			if(character.animatePose) {
-				character.outfit.play();
-			} else {
-				character.outfit.stop();
-			}
-			_toolbox.toggleAnimateButtonAsset(character.animatePose);
+			character.nextFrameChildren();
+			// character.animatePose = !character.animatePose;
+			// if(character.animatePose) {
+			// 	character.outfit.play();
+			// } else {
+			// 	character.outfit.stop();
+			// }
+			// _toolbox.toggleAnimateButtonAsset(character.animatePose);
 		}
 
 		private function _onSaveClicked(pEvent:Event) : void {
-			FewfDisplayUtils.saveAsPNG(this.character, "shamanitem");
+			FewfDisplayUtils.saveAsPNG(this.character, "decoration");
 		}
 
 		private function _onItemToggled(pEvent:FewfEvent) : void {

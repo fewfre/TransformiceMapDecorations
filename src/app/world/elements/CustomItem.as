@@ -7,6 +7,7 @@ package app.world.elements
 	import flash.events.*;
 	import flash.geom.*;
 	import flash.net.*;
+	import flash.display.MovieClip;
 
 	public class CustomItem extends Sprite
 	{
@@ -63,6 +64,8 @@ package app.world.elements
 			}
 			else { GameAssets.colorDefault(outfit); }
 			
+			stopChildren();
+			
 			// if(animatePose) outfit.play(); else outfit.stopAtLastFrame();
 		}
 
@@ -91,6 +94,32 @@ package app.world.elements
 
 			return tParms;*/
 			return null;
+		}
+		
+		public function stopChildren() : void {
+			applyToAllChildren(function(pChild){
+				pChild.stop();
+			});
+		}
+		
+		public function nextFrameChildren() : void {
+			applyToAllChildren(function(pChild){
+				pChild.nextFrame();
+			});
+		}
+		
+		public function goToFrameChildren(pFrame:int) : void {
+			applyToAllChildren(function(pChild){
+				pChild.gotoAndStop(pFrame);
+			});
+		}
+		
+		public function applyToAllChildren(pCallback:Function) : void {
+			var tChild:MovieClip = null;
+			for(var i:int = outfit.numChildren-1; i >= 0; i--) {
+				tChild = outfit.getChildAt(i) as MovieClip;
+				if(tChild) pCallback(tChild);
+			}
 		}
 
 		/****************************

@@ -159,7 +159,7 @@ package app.ui
 		internal function saveSprite(pEvent:Event) : void
 		{
 			if(!data) { return; }
-			var tName = "shop-"+data.type+data.id;
+			var tName = "Decoration "+data.id;
 			FewfDisplayUtils.saveAsPNG(GameAssets.getItemImage(data), tName, ConstantsApp.ITEM_SAVE_SCALE);
 		}
 	}

@@ -67,12 +67,12 @@ package app.ui
 
 			/*btn = tTray.addChild(new SpriteButton({ x:tX-tButtonXInc*tButtonOnRight, y:tY, width:tButtonSize, height:tButtonSize, obj_scale:0.5, obj:new $Refresh(), origin:0.5 }));
 			btn.addEventListener(ButtonBase.CLICK, pData.onRandomize);
-			tButtonOnRight++;
+			tButtonOnRight++;*/
 			
 			animateButton = tTray.addChild(new SpriteButton({ x:tX-tButtonXInc*tButtonOnRight, y:tY, width:tButtonSize, height:tButtonSize, obj_scale:0.5, obj:new MovieClip(), origin:0.5 }));
 			animateButton.addEventListener(ButtonBase.CLICK, pData.onAnimate);
 			toggleAnimateButtonAsset(pData.character.animatePose);
-			tButtonOnRight++;*/
+			tButtonOnRight++;
 			
 			/********************
 			* Scale slider
