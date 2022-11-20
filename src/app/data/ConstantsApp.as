@@ -13,7 +13,7 @@ package app.data
 		* General
 		*****************************/
 		public static const VERSION					: String = "1.3";
-		public static const SOURCE_URL				: String = "https://github.com/fewfre/TransformiceShamanItems";
+		public static const SOURCE_URL				: String = "https://github.com/fewfre/TransformiceMapDecorations";
 		
 		public static const DEFAULT_SKIN_ID			: int = 0;
 		public static const DEFAULT_POSE_ID			: int = 0;
