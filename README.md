@@ -1,4 +1,4 @@
-# TransformiceShamanItems
-Transformice shaman item color editor.
+# TransformiceMapDecorations
+Transformice map decorations viewer.
 
-View it live at: http://projects.fewfre.com/a801/transformice/shaman_items/
+View it live at: https://projects.fewfre.com/a801/transformice/decorations/
