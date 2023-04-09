@@ -1,8 +1,8 @@
 package app.ui.screens
 {
 	import app.data.*;
-	import app.ui.*;
 	import app.ui.buttons.*;
+	import app.ui.common.*;
 	import app.world.data.*;
 	import com.adobe.images.*;
 	import com.fewfre.display.*;
@@ -40,9 +40,8 @@ package app.ui.screens
 			* Background
 			*****************************/
 			var tWidth:Number = 500, tHeight:Number = 200;
-			_tray = addChild(new RoundedRectangle({ x:0, y:0, width:tWidth, height:tHeight, origin:0.5 })) as RoundedRectangle;
-			_tray.drawSimpleGradient(ConstantsApp.COLOR_TRAY_GRADIENT, 15, ConstantsApp.COLOR_TRAY_B_1, ConstantsApp.COLOR_TRAY_B_2, ConstantsApp.COLOR_TRAY_B_3);
-			
+			_tray = new RoundedRectangle({ width:tWidth, height:tHeight, origin:0.5 }).appendTo(this).drawAsTray();
+
 			/****************************
 			* Languages
 			*****************************/
@@ -66,18 +65,19 @@ package app.ui.screens
 			/****************************
 			* Close Button
 			*****************************/
-			var tCloseButton:ScaleButton = addChild(new ScaleButton({ x:tWidth*0.5 - 5, y:-tHeight*0.5 + 5, obj:new MovieClip() })) as ScaleButton;
-			tCloseButton.addEventListener(ButtonBase.CLICK, _onCloseClicked);
-			
+			var tCloseIcon = new MovieClip();
 			var tSize:Number = 10;
-			tCloseButton.Image.graphics.beginFill(0x000000, 0);
-			tCloseButton.Image.graphics.drawRect(-tSize*2, -tSize*2, tSize*4, tSize*4);
-			tCloseButton.Image.graphics.endFill();
-			tCloseButton.Image.graphics.lineStyle(8, 0xFFFFFF, 1, true);
-			tCloseButton.Image.graphics.moveTo(-tSize, -tSize);
-			tCloseButton.Image.graphics.lineTo(tSize, tSize);
-			tCloseButton.Image.graphics.moveTo(tSize, -tSize);
-			tCloseButton.Image.graphics.lineTo(-tSize, tSize);
+			tCloseIcon.graphics.beginFill(0x000000, 0);
+			tCloseIcon.graphics.drawRect(-tSize*2, -tSize*2, tSize*4, tSize*4);
+			tCloseIcon.graphics.endFill();
+			tCloseIcon.graphics.lineStyle(8, 0xFFFFFF, 1, true);
+			tCloseIcon.graphics.moveTo(-tSize, -tSize);
+			tCloseIcon.graphics.lineTo(tSize, tSize);
+			tCloseIcon.graphics.moveTo(tSize, -tSize);
+			tCloseIcon.graphics.lineTo(-tSize, tSize);
+			
+			var tCloseButton:ScaleButton = addChild(new ScaleButton({ x:tWidth*0.5 - 5, y:-tHeight*0.5 + 5, obj:tCloseIcon })) as ScaleButton;
+			tCloseButton.addEventListener(ButtonBase.CLICK, _onCloseClicked);
 		}
 		
 		private function _getFlagImage(pLangData:Object) : MovieClip {
@@ -102,6 +102,7 @@ package app.ui.screens
 		
 		private function _onLanguageClicked(pEvent:FewfEvent) : void {
 			var tLangData = pEvent.data;
+			Fewf.sharedObjectGlobal.setData(ConstantsApp.SHARED_OBJECT_KEY_GLOBAL_LANG, tLangData.code);
 			_close();
 			if(Fewf.assets.getData(tLangData.code)) {
 				Fewf.i18n.parseFile(tLangData.code, Fewf.assets.getData(tLangData.code));
@@ -110,7 +111,7 @@ package app.ui.screens
 			var tLoaderDisplay = addChild( new LoaderDisplay({  }) );
 			
 			Fewf.assets.load([
-				"resources/i18n/"+tLangData.code+".json",
+				Fewf.swfUrlBase+"resources/i18n/"+tLangData.code+".json",
 			]);
 			Fewf.assets.addEventListener(AssetManager.LOADING_FINISHED, function(e:Event){
 				Fewf.assets.removeEventListener(AssetManager.LOADING_FINISHED, arguments.callee);

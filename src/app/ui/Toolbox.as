@@ -5,14 +5,20 @@ package app.ui
 	import app.data.*;
 	import app.ui.*;
 	import app.ui.buttons.*;
+	import app.ui.common.*;
 	import flash.display.*;
 	import flash.net.*;
+	import app.world.elements.CustomItem;
+	import com.fewfre.utils.FewfDisplayUtils;
+	import flash.utils.setTimeout;
 	
 	public class Toolbox extends MovieClip
 	{
 		// Storage
 		private var _downloadTray	: FrameBase;
 		private var _bg				: RoundedRectangle;
+		private var _character		: CustomItem;
+		
 		public var scaleSlider		: FancySlider;
 		public var animateButton	: SpriteButton;
 		public var imgurButton		: SpriteButton;
@@ -20,6 +26,7 @@ package app.ui
 		// Constructor
 		// pData = { x:Number, y:Number, character:Character, onSave:Function, onAnimate:Function, onRandomize:Function, onShare:Function, onScale:Function }
 		public function Toolbox(pData:Object) {
+			_character = pData.character;
 			this.x = pData.x;
 			this.y = pData.y;
 			
@@ -54,13 +61,26 @@ package app.ui
 			btn.addEventListener(ButtonBase.CLICK, pData.onShare);
 			tButtonsOnLeft++;*/
 			
-			btn = imgurButton = tTray.addChild(new SpriteButton({ x:tX+tButtonXInc*tButtonsOnLeft, y:tY, width:tButtonSize, height:tButtonSize, obj_scale:0.45, obj:new $ImgurIcon(), origin:0.5 })) as SpriteButton;
-			var tCharacter = pData.character;
-			btn.addEventListener(ButtonBase.CLICK, function(e:*){
-				ImgurApi.uploadImage(tCharacter);
-				imgurButton.disable();
-			});
-			tButtonsOnLeft++;
+			if(!Fewf.isExternallyLoaded) {
+				btn = imgurButton = tTray.addChild(new SpriteButton({ x:tX+tButtonXInc*tButtonsOnLeft, y:tY, width:tButtonSize, height:tButtonSize, obj_scale:0.45, obj:new $ImgurIcon(), origin:0.5 })) as SpriteButton;
+				btn.addEventListener(ButtonBase.CLICK, function(e:*){
+					ImgurApi.uploadImage(_character);
+					imgurButton.disable();
+				});
+				tButtonsOnLeft++;
+			} else {
+				btn = imgurButton = tTray.addChild(new SpriteButton({ x:tX+tButtonXInc*tButtonsOnLeft, y:tY, width:tButtonSize, height:tButtonSize, obj_scale:0.415, obj:new $CopyIcon(), origin:0.5 })) as SpriteButton;
+				btn.addEventListener(ButtonBase.CLICK, function(e:*){
+					try {
+						FewfDisplayUtils.copyToClipboard(_character);
+						imgurButton.ChangeImage(new $Yes());
+					} catch(e) {
+						imgurButton.ChangeImage(new $No());
+					}
+					setTimeout(function(){ imgurButton.ChangeImage(new $CopyIcon()); }, 750)
+				});
+				tButtonsOnLeft++;
+			}
 			
 			// ### Right Side Buttons ###
 			tX = tTrayWidth*0.5-(tButtonSize*0.5 + tButtonSizeSpace);
@@ -79,10 +99,10 @@ package app.ui
 			*********************/
 			var tTotalButtons = tButtonsOnLeft+tButtonOnRight;
 			var tSliderWidth = tTrayWidth - tButtonXInc*(tTotalButtons) - 20;
-			scaleSlider = tTray.addChild(new FancySlider({
-				x:-tSliderWidth*0.5+(tButtonXInc*((tButtonsOnLeft-tButtonOnRight)*0.5))-1, y:tY,
-				value: pData.character.outfit.scaleX*10, min:10, max:40, width:tSliderWidth
-			}));
+			tX = -tSliderWidth*0.5+(tButtonXInc*((tButtonsOnLeft-tButtonOnRight)*0.5))-1;
+			scaleSlider = new FancySlider(tSliderWidth).setXY(tX, tY)
+				.setSliderParams(1, 8, pData.character.outfit.scaleX)
+				.appendTo(tTray);
 			scaleSlider.addEventListener(FancySlider.CHANGE, pData.onScale);
 			
 			pData = null;

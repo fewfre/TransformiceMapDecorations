@@ -14,7 +14,6 @@ package app
 	public class Main extends MovieClip
 	{
 		// Storage
-		private const _LOAD_LOCAL:Boolean = true;
 		private var _loaderDisplay	: LoaderDisplay;
 		private var _world			: World;
 		private var _config			: Object;
@@ -23,7 +22,16 @@ package app
 		// Constructor
 		public function Main() {
 			super();
-			Fewf.init(stage, this.loaderInfo.parameters.swfUrlBase);
+			
+			if (stage) {
+				this._start();
+			} else {
+				addEventListener(Event.ADDED_TO_STAGE, this._start);
+			}
+		}
+		
+		private function _start(...args:*) {
+			Fewf.init(stage, this.loaderInfo.parameters.swfUrlBase, 'fewfre-transformice-map-decorations');
 
 			stage.align = StageAlign.TOP;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -64,12 +72,12 @@ package app
 		// Start main load
 		private function _startLoad() : void {
 			var tPacks = [
-				["resources/interface.swf", { useCurrentDomain:true }],
-				"resources/flags.swf"
+				[Fewf.swfUrlBase+"resources/interface.swf", { useCurrentDomain:true }],
+				Fewf.swfUrlBase+"resources/flags.swf"
 			];
 			
 			var tPack = _config.packs.items;
-			for(var i:int = 0; i < tPack.length; i++) { tPacks.push("resources/"+tPack[i]); }
+			for(var i:int = 0; i < tPack.length; i++) { tPacks.push(Fewf.swfUrlBase+"resources/"+tPack[i]); }
 			
 			_load(tPacks, Fewf.assets.getData("config").cachebreaker, _onLoadComplete);
 		}
@@ -97,7 +105,7 @@ package app
 		
 		private function _getDefaultLang(pConfigLang:String) : String {
 			// If user manually picked a language previously, override system check
-			var detectedLang = Fewf.sharedObject.getData("lang") || Capabilities.language;
+			var detectedLang = Fewf.sharedObjectGlobal.getData(ConstantsApp.SHARED_OBJECT_KEY_GLOBAL_LANG) || Capabilities.language;
 			
 			var tFlagDefaultLangExists:Boolean = false;
 			// http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/system/Capabilities.html#language

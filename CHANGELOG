@@ -1,3 +1,8 @@
+== V1.4 - 9 April 2023 ==
+- Porting over TFM dressroom code changes from last few years
+- Added support for app to be openable in launcher
+
+
 == V1.3 - 9 June 2018 ==
 - Code cleanup / validation for "strict" compilation
 - Small changes to code strucutre (including old file removal)
