@@ -6,21 +6,19 @@ package app.world.data
 
 	public class ItemData
 	{
+		public var type			: CategoryType;
 		public var id			: String;
-		public var type			: String;
-		public var gender		: String;
 		public var itemClass	: Class;
 		public var classMap		: Object;
 
 		public var defaultColors: Array;
 		public var colors		: Array;
 
-		// pData = { id:String, type:String, itemClass:Class, ?gender:String, ?classMap:Object<Class> }
-		public function ItemData(pData:Object) {
+		// pData = { itemClass:Class, ?classMap:Object<Class> }
+		public function ItemData(pType:CategoryType, pId:String, pData:Object) {
 			super();
-			id = pData.id;
-			type = pData.type;
-			gender = pData.gender;
+			type = pType;
+			id = pId;
 			itemClass = pData.itemClass;
 			classMap = pData.classMap;
 			_initDefaultColors();
@@ -32,8 +30,6 @@ package app.world.data
 		public function setColorsToDefault() : void {
 			colors = defaultColors.concat();
 		}
-		
-		// public function isSkin() : Boolean { return type == ITEM.SKIN || type == ITEM.SKIN_COLOR; }
 
 		public function getPart(pID:String, pOptions:Object=null) : Class {
 			return !classMap ? null : (classMap[pID] ? classMap[pID] : null);

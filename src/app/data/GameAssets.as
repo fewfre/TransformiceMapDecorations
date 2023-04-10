@@ -9,28 +9,41 @@ package app.data
 	import flash.display.*;
 	import flash.geom.*;
 	import flash.net.*;
+	import flash.utils.Dictionary;
 
 	public class GameAssets
 	{
-		private static const _MAX_COSTUMES_TO_CHECK_TO:Number = 10240;
+		private static const _MAX_COSTUMES_TO_CHECK_TO:Number = 10240; // all are numbered in a row, so fine to have this large
 		
-		public static var boxes_small:Array;
+		public static var all_decorations: Vector.<ItemData>;
+		public static var decorationDataMap: Dictionary;
+		
+		private static var decIDtoCategoryTypeMap: Dictionary;
 
 		public static function init() : void {
-			boxes_small = _setupCostumeArray({ base:"$P_", type:ITEM.BOX_SMALL });
+			_setupIdToCatMap();
+			
+			all_decorations = new Vector.<ItemData>();
+			decorationDataMap = new Dictionary();
+			for each(var tType:CategoryType in CategoryType.ALL) {
+				decorationDataMap[tType] = new Vector.<ItemData>();
+			}
+			_setupDecorationLists();
 		}
 
 		// pData = { base:String, type:String, after:String, pad:int }
-		private static function _setupCostumeArray(pData:Object) : Array {
-			var tArray:Array = new Array();
-			var tClassName:String;
-			var tClass:Class;
+		private static function _setupDecorationLists() {
+			var tClass:Class, tData:ItemData, type:CategoryType;
 			var breakCount = 0; // quit early if enough nulls in a row
 			for(var i = 0; i <= _MAX_COSTUMES_TO_CHECK_TO; i++) {
-				tClass = Fewf.assets.getLoadedClass( pData.base+(pData.pad ? zeroPad(i, pData.pad) : i)+(pData.after ? pData.after : "") );
+				tClass = Fewf.assets.getLoadedClass( "$P_"+i );
 				if(tClass != null) {
 					breakCount = 0;
-					tArray.push( new ItemData({ id:i, type:pData.type, itemClass:tClass}) );
+					
+					type = getCategoryTypeFromDecId(i);
+					tData = new ItemData(type, i, { itemClass:tClass });
+					all_decorations.push(tData);
+					decorationDataMap[type].push(tData);
 				} else {
 					breakCount++;
 					if(breakCount > 5) {
@@ -38,7 +51,6 @@ package app.data
 					}
 				}
 			}
-			return tArray;
 		}
 
 		public static function zeroPad(number:int, width:int):String {
@@ -48,12 +60,57 @@ package app.data
 			return ret;
 		}
 
-		public static function getArrayByType(pType:String) : Array {
-			return boxes_small;
+		private static function _setupIdToCatMap():void {
+			decIDtoCategoryTypeMap = new Dictionary();
+			// Taken from game code
+            _catmap_loopBetweenAndSet(0,13,CategoryType.Transformice);
+            _catmap_loopBetweenAndSet(14,34,CategoryType.House);
+            _catmap_loopBetweenAndSet(35,49,CategoryType.Autumn);
+            _catmap_loopBetweenAndSet(50,64,CategoryType.Winter);
+            _catmap_loopBetweenAndSet(65,77,CategoryType.Valentines);
+            _catmap_loopBetweenAndSet(78,88,CategoryType.Sea);
+            _catmap_loopBetweenAndSet(91,118,CategoryType.Autumn);
+            _catmap_loopBetweenAndSet(119,132,CategoryType.House);
+            _catmap_loopBetweenAndSet(133,137,CategoryType.Autumn);
+            _catmap_loopBetweenAndSet(138,147,CategoryType.Winter);
+            _catmap_loopBetweenAndSet(154,157,CategoryType.Transformice);
+            _catmap_loopBetweenAndSet(158,179,CategoryType.Autumn);
+            _catmap_loopBetweenAndSet(197,210,CategoryType.Winter);
+            _catmap_loopBetweenAndSet(239,256,CategoryType.Transformice);
+            _catmap_loopBetweenAndSet(257,264,CategoryType.Winter);
+            _catmap_loopBetweenAndSet(265,271,CategoryType.Spring);
+            _catmap_manualSet(CategoryType.Transformice,148,149,181,183,186,193,195,211,267,268,269,272,273,274,275);
+            _catmap_manualSet(CategoryType.House,185,189,190);
+            _catmap_manualSet(CategoryType.Winter,182,184,186,191,192,194,196,212);
+            _catmap_manualSet(CategoryType.Spring,219,220,221,222,227,228,229,230,231);
+            _catmap_manualSet(CategoryType.Valentines,217,218,223,224,225,226,282);
+		}
+      
+      private static function getCategoryTypeFromDecId(param1:int) : CategoryType {
+		return !!decIDtoCategoryTypeMap[param1] ? decIDtoCategoryTypeMap[param1] : CategoryType.Various;
+      }
+      
+      private static function _catmap_loopBetweenAndSet(start:int, length:int, value:CategoryType) : void {
+		for(var i:int = start; i <= length; i++){ decIDtoCategoryTypeMap[i] = value; }
+      }
+      
+      private static function _catmap_manualSet(value:CategoryType, ... rest) : void {
+		for(var i:int = 0; i < rest.length; i++){
+            decIDtoCategoryTypeMap[rest[i]] = value;
+		}
+      }
+		
+		/****************************
+		* Access Data
+		*****************************/
+		public static function getItemDataListByType(pType:CategoryType) : Vector.<ItemData> {
+			if(decorationDataMap[pType]) { return decorationDataMap[pType]; }
+			trace("[GameAssets](getItemDataListByType) Unknown type: "+pType);
+			return null;
 		}
 
-		public static function getItemFromTypeID(pType:String, pID:String) : ItemData {
-			return FewfUtils.getFromArrayWithKeyVal(getArrayByType(pType), "id", pID);
+		public static function getItemFromTypeID(pType:CategoryType, pID:String) : ItemData {
+			return FewfUtils.getFromVectorWithKeyVal(getItemDataListByType(pType), "id", pID);
 		}
 
 		/****************************

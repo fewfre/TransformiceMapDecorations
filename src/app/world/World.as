@@ -41,8 +41,7 @@ package app.world
 		// internal var linkTray		: LinkTray;
 		internal var _langScreen	: LangScreen;
 
-		internal var currentlyColoringType:String="";
-		internal var configCurrentlyColoringType:String;
+		internal var currentlyColoringType:CategoryType=null;
 		
 		// Constants
 		public static const COLOR_PANE_ID = "colorPane";
@@ -75,7 +74,7 @@ package app.world
 			} catch (error:Error) { };
 
 			this.character = addChild(new CustomItem({ x:190, y:325,
-				item:GameAssets.boxes_small[0],
+				item: GameAssets.getItemDataListByType(CategoryType.ALL[0])[0],
 				params:parms
 			})) as CustomItem;
 
@@ -86,9 +85,12 @@ package app.world
 				.appendTo(this).drawAsTray();
 			_paneManager = tShop.addChild(new PaneManager()) as PaneManager;
 			
-			this.shopTabs = new ShopTabList(70, ConstantsApp.APP_HEIGHT, new <Object>[
-				{ text:"btn_color_defaults", event:ITEM.BOX_SMALL },
-			]).setXY(375, 10).appendTo(this);
+			var tabs:Vector.<Object> = new <Object>[];
+			for each(var tType:CategoryType in CategoryType.ALL) {
+				tabs.push({ text:tType.toString(), event:tType.toString() });
+			}
+			
+			this.shopTabs = new ShopTabList(70, ConstantsApp.APP_HEIGHT, tabs).setXY(375, 10).appendTo(this);
 			this.shopTabs.addEventListener(ShopTabList.TAB_CLICKED, _onTabClicked);
 
 			// Toolbox
@@ -126,33 +128,23 @@ package app.world
 			tPane.addEventListener(ColorFinderPane.EVENT_EXIT, _onColorFinderBackClicked);
 
 			// Create the panes
-			var tTypes = [ ITEM.BOX_SMALL ], tData:ItemData, tType:String;
-			for(var i:int = 0; i < tTypes.length; i++) { tType = tTypes[i];
-				tPane = _paneManager.addPane(tType, _setupPane(tType));
-				// Based on what the character is wearing at start, toggle on the appropriate buttons.
-				/*tData = character.getItemData(tType);
-				if(tData) {
-					var tIndex:int = FewfUtils.getIndexFromArrayWithKeyVal(GameAssets.getArrayByType(tType), "id", tData.id);
-					tPane.buttons[ tIndex ].toggleOn();
-				}*/
+			for each(var tType:CategoryType in CategoryType.ALL) {
+				tPane = _paneManager.addPane(tType.toString(), _setupPane(tType));
 			}
 			
 			// Select First Pane
 			shopTabs.tabs[0].toggleOn();
-			_paneManager.getPane(tTypes[0]).buttons[0].toggleOn();
+			_paneManager.getPane(CategoryType.ALL[0].toString()).buttons[0].toggleOn();
 			
 			tPane = null;
-			tTypes = null;
-			tData = null;
 		}
 
-		private function _setupPane(pType:String) : TabPane {
+		private function _setupPane(pType:CategoryType) : TabPane {
 			var tPane:TabPane = new TabPane();
 			tPane.addInfoBar( new ShopInfoBar({ showEyeDropButton:true, showGridManagementButtons:true }) );
-			_setupPaneButtons(pType, tPane, GameAssets.getArrayByType(pType));
+			_setupPaneButtons(pType, tPane, GameAssets.getItemDataListByType(pType));
 			// tPane.infoBar.colorWheel.addEventListener(ButtonBase.CLICK, function(){ _colorButtonClicked(pType); });
-			/*tPane.infoBar.imageCont.addEventListener(MouseEvent.CLICK, function(){ _removeItem(pType); });*/
-			/*tPane.infoBar.refreshButton.addEventListener(ButtonBase.CLICK, function(){ _randomItemOfType(pType); });*/
+			tPane.infoBar.removeItemOverlay.addEventListener(MouseEvent.CLICK, function(){ _removeItem(pType); });
 			// Grid Management Events
 			tPane.infoBar.randomizeButton.addEventListener(ButtonBase.CLICK, function(){ _randomItemOfType(pType); });
 			tPane.infoBar.reverseButton.addEventListener(ButtonBase.CLICK, function(){ tPane.grid.reverse(); });
@@ -165,13 +157,13 @@ package app.world
 			return tPane;
 		}
 
-		private function _setupPaneButtons(pType:String, pPane:TabPane, pItemArray:Array) : void {
-			var buttonPerRow = 6;
+		private function _setupPaneButtons(pType:CategoryType, pPane:TabPane, pItemArray:Vector.<ItemData>) : void {
+			var buttonPerRow = 5;
 			var scale = 1;
-			if(pType == ITEM.BOX_LARGE || pType == ITEM.PLANK_LARGE) {
-					buttonPerRow = 5;
-					scale = 1;
-			}
+			// if(pType == CategoryType.Various) {
+			// 		buttonPerRow = 4;
+			// 		scale = 1;
+			// }
 
 			var grid:Grid = pPane.grid;
 			if(!grid) { grid = pPane.addGrid( new Grid(385, buttonPerRow) ).setXY(15, 5); }
@@ -297,8 +289,8 @@ package app.world
 		}
 
 		private function _onItemToggled(pEvent:FewfEvent) : void {
-			var tType = pEvent.data.type;
-			var tItemArray:Array = GameAssets.getArrayByType(tType);
+			var tType:CategoryType = pEvent.data.type;
+			var tItemArray:Vector.<ItemData> = GameAssets.getItemDataListByType(tType);
 			var tInfoBar:ShopInfoBar = getInfoBarByType(tType);
 
 			// De-select all buttons that aren't the clicked one.
@@ -311,13 +303,13 @@ package app.world
 			
 			// Select buttons on other tabs
 			var tButtons2:Array = null;
-			for(var j:int = 0; j < ITEM.ALL.length; j++) {
-				if(ITEM.ALL[j] == tType) { continue; }
-				tButtons2 = getButtonArrayByType(ITEM.ALL[j]);
+			for(var j:int = 0; j < CategoryType.ALL.length; j++) {
+				if(CategoryType.ALL[j] == tType) { continue; }
+				tButtons2 = getButtonArrayByType(CategoryType.ALL[j]);
 				for(var i:int = 0; i < tButtons2.length; i++) {
 					if (tButtons2[i].pushed)  { tButtons2[i].toggleOff(); }
 				}
-				_paneManager.getPane(ITEM.ALL[j]).infoBar.removeInfo();
+				getTabByType(CategoryType.ALL[j]).infoBar.removeInfo();
 			}
 			tButtons2 = null;
 
@@ -336,7 +328,7 @@ package app.world
 			}
 		}
 
-		private function toggleItemSelectionOneOff(pType:String, pButton:PushButton, pItemData:ItemData) : void {
+		private function toggleItemSelectionOneOff(pType:CategoryType, pButton:PushButton, pItemData:ItemData) : void {
 			if (pButton.pushed) {
 				this.character.setItemData( pItemData );
 			} else {
@@ -344,7 +336,7 @@ package app.world
 			}
 		}
 
-		private function _removeItem(pType:String) : void {
+		private function _removeItem(pType:CategoryType) : void {
 			var tTabPane = getTabByType(pType);
 			if(tTabPane.infoBar.hasData == false) { return; }
 
@@ -370,7 +362,7 @@ package app.world
 		// 	_randomItemOfType(ITEM.POSE);
 		// }
 
-		private function _randomItemOfType(pType:String) : void {
+		private function _randomItemOfType(pType:CategoryType) : void {
 			/*if(getInfoBarByType(pType).isRefreshLocked) { return; }*/
 			var tButtons = getButtonArrayByType(pType);
 			var tLength = tButtons.length;
@@ -404,23 +396,23 @@ package app.world
 		}
 
 		//{REGION Get TabPane data
-			private function getTabByType(pType:String) : TabPane {
-				return _paneManager.getPane(pType);
+			private function getTabByType(pType:CategoryType) : TabPane {
+				return _paneManager.getPane(pType.toString());
 			}
 
-			private function getInfoBarByType(pType:String) : ShopInfoBar {
+			private function getInfoBarByType(pType:CategoryType) : ShopInfoBar {
 				return getTabByType(pType).infoBar;
 			}
 
-			private function getButtonArrayByType(pType:String) : Array {
+			private function getButtonArrayByType(pType:CategoryType) : Array {
 				return getTabByType(pType).buttons;
 			}
 
-			private function getCurItemID(pType:String) : int {
+			private function getCurItemID(pType:CategoryType) : int {
 				return getTabByType(pType).selectedButtonIndex;
 			}
 
-			private function setCurItemID(pType:String, pID:int) : void {
+			private function setCurItemID(pType:CategoryType, pID:int) : void {
 				getTabByType(pType).selectedButtonIndex = pID;
 			}
 		//}END Get TabPane data
@@ -469,11 +461,11 @@ package app.world
 			// 	_paneManager.openPane(COLOR_PANE_ID);
 			// }
 
-			private function _onColorPickerBackClicked(pEvent:Event):void {
-				_paneManager.openPane(_paneManager.getPane(COLOR_PANE_ID).infoBar.data.type);
-			}
+			// private function _onColorPickerBackClicked(pEvent:Event):void {
+			// 	_paneManager.openPane(_paneManager.getPane(COLOR_PANE_ID).infoBar.data.type.toString());
+			// }
 
-			private function _eyeDropButtonClicked(pType:String) : void {
+			private function _eyeDropButtonClicked(pType:CategoryType) : void {
 				if(this.character.getItemData(pType) == null) { return; }
 
 				var tData:ItemData = getInfoBarByType(pType).data;
@@ -486,7 +478,7 @@ package app.world
 			}
 
 			private function _onColorFinderBackClicked(pEvent:Event):void {
-				_paneManager.openPane(_paneManager.getPane(COLOR_FINDER_PANE_ID).infoBar.data.type);
+				_paneManager.openPane(_paneManager.getPane(COLOR_FINDER_PANE_ID).infoBar.data.type.toString());
 			}
 		//}END Color Tab
 	}

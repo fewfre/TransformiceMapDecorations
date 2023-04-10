@@ -137,7 +137,7 @@ package app.world.elements
 		/****************************
 		* Update Data
 		*****************************/
-		public function getItemData(pType:String) : ItemData {
+		public function getItemData(pType:CategoryType) : ItemData {
 			return _itemData;
 		}
 
@@ -146,7 +146,7 @@ package app.world.elements
 			updateItem();
 		}
 
-		public function removeItem(pType:String) : void {
+		public function removeItem(pType:CategoryType) : void {
 			_itemData = null;
 			updateItem();
 		}

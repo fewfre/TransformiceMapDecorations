@@ -1,6 +1,7 @@
 == V1.4 - 9 April 2023 ==
 - Porting over TFM dressroom code changes from last few years
 - Added support for app to be openable in launcher
+- Decoration categories now supported
 
 
 == V1.3 - 9 June 2018 ==
