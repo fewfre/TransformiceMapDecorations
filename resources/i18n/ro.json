@@ -14,14 +14,13 @@
 		"version":				{ "text":"Versiune: {0}" },
 		"translated_by":		{ "text":"Translated by: Sky_dreams" },
 		
-		"tab_box_small":		{ "text":"Cutie (s)" },
-		"tab_box_large":		{ "text":"Cutie (L)" },
-		"tab_plank_small":		{ "text":"Scândură\n(s)", "scale":0.9 },
-		"tab_plank_large":		{ "text":"Scândură\n(L)", "scale":0.9 },
-		"tab_ball":				{ "text":"Minge" },
-		"tab_trampoline":		{ "text":"Trambulină", "scale":0.75 },
-		"tab_anvil":			{ "text":"Nicovală" },
-		"tab_cannonball":		{ "text":"Bilă" },
-		"tab_balloon":			{ "text":"Balon" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"Casă" },
+		"CatPicto_400":			{ "text":"Toamnă" },
+		"CatPicto_500":			{ "text":"Iarnă" },
+		"CatPicto_900":			{ "text":"Sfântul\nValentin", "scale":0.8 },
+		"CatPicto_150":			{ "text":"Mare" },
+		"CatPicto_600":			{ "text":"Primăvară", "scale":0.85 },
+		"CatPicto_1000":		{ "text":"Diverse" }
 	}
 }

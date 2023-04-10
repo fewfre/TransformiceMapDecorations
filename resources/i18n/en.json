@@ -9,11 +9,11 @@
 		},
 		"example2":				{ "text":"Example", "scale":0.9, "font":"Monospace" },
 		
-		"CatPicto_100":			{ "text":"Transformice" },
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
 		"CatPicto_300":			{ "text":"House" },
 		"CatPicto_400":			{ "text":"Autumn" },
 		"CatPicto_500":			{ "text":"Winter" },
-		"CatPicto_900":			{ "text":"Valentine's\nday" },
+		"CatPicto_900":			{ "text":"Valentine's\nday", "scale":0.75 },
 		"CatPicto_150":			{ "text":"Sea" },
 		"CatPicto_600":			{ "text":"Spring" },
 		"CatPicto_1000":		{ "text":"Various" },

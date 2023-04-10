@@ -14,14 +14,13 @@
 		"version":				{ "text":"Versija: {0}" },
 		"translated_by":		{ "text":"Tulkoja: Marciskris" },
 		
-		"tab_box_small":		{ "text":"Maza\nkaste", "scale":0.9 },
-		"tab_box_large":		{ "text":"Lielā\nkaste", "scale":0.9 },
-		"tab_plank_small":		{ "text":"Īsais\ndēlis", "scale":0.9 },
-		"tab_plank_large":		{ "text":"Garais\ndēlis", "scale":0.9 },
-		"tab_ball":				{ "text":"Bumba" },
-		"tab_trampoline":		{ "text":"Tramplīns", "scale":0.9 },
-		"tab_anvil":			{ "text":"Lakta" },
-		"tab_cannonball":		{ "text":"Lode" },
-		"tab_balloon":			{ "text":"Balons" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"Māja" },
+		"CatPicto_400":			{ "text":"Rudens" },
+		"CatPicto_500":			{ "text":"Ziema" },
+		"CatPicto_900":			{ "text":"Valentīn\n-diena", "scale":0.8 },
+		"CatPicto_150":			{ "text":"Jūra" },
+		"CatPicto_600":			{ "text":"Pavasaris", "scale":0.9 },
+		"CatPicto_1000":		{ "text":"Dažādi" }
 	}
 }

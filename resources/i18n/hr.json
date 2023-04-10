@@ -14,14 +14,13 @@
 		"version":				{ "text":"Verzija: {0}" },
 		"translated_by":		{ "text":"Preveo: Brunocarfd" },
 		
-		"tab_box_small":		{ "text":"Kutija (m)", "scale":0.8 },
-		"tab_box_large":		{ "text":"Kutija (V)", "scale":0.8 },
-		"tab_plank_small":		{ "text":"Daska (m)", "scale":0.75 },
-		"tab_plank_large":		{ "text":"Daska (V)", "scale":0.75 },
-		"tab_ball":				{ "text":"Lopta" },
-		"tab_trampoline":		{ "text":"Trampolin", "scale":0.85 },
-		"tab_anvil":			{ "text":"Nakovanj", "scale":0.95 },
-		"tab_cannonball":		{ "text":"Topovska\nkugla", "scale":0.9 },
-		"tab_balloon":			{ "text":"Balon" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"House" },
+		"CatPicto_400":			{ "text":"Autumn" },
+		"CatPicto_500":			{ "text":"Winter" },
+		"CatPicto_900":			{ "text":"Valentine's\nday", "scale":0.75 },
+		"CatPicto_150":			{ "text":"Sea" },
+		"CatPicto_600":			{ "text":"Spring" },
+		"CatPicto_1000":		{ "text":"Various" }
 	}
 }

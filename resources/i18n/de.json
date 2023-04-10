@@ -14,14 +14,13 @@
 		"version":				{ "text":"Version: {0}" },
 		"translated_by":		{ "text":"Übersetzt von: Virus_Code" },
 		
-		"tab_box_small":		{ "text":"Box (k)" },
-		"tab_box_large":		{ "text":"Box (G)" },
-		"tab_plank_small":		{ "text":"Brett (k)" },
-		"tab_plank_large":		{ "text":"Brett (G)" },
-		"tab_ball":				{ "text":"Ball" },
-		"tab_trampoline":		{ "text":"Trampolin", "scale":0.9 },
-		"tab_anvil":			{ "text":"Amboss" },
-		"tab_cannonball":		{ "text":"Kanonen-\nkugel", "scale":0.9 },
-		"tab_balloon":			{ "text":"Ballon" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"House" },
+		"CatPicto_400":			{ "text":"Autumn" },
+		"CatPicto_500":			{ "text":"Winter" },
+		"CatPicto_900":			{ "text":"Valentine's\nday", "scale":0.75 },
+		"CatPicto_150":			{ "text":"Sea" },
+		"CatPicto_600":			{ "text":"Spring" },
+		"CatPicto_1000":		{ "text":"Various" }
 	}
 }

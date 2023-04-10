@@ -14,14 +14,13 @@
 		"version":				{ "text":"Версия: {0}" },
 		"translated_by":		{ "text":"Переведено: Cakeslices" },
 		
-		"tab_box_small":		{ "text":"Ящик (s)", "scale":0.95 },
-		"tab_box_large":		{ "text":"Ящик (L)", "scale":0.95 },
-		"tab_plank_small":		{ "text":"Доска (s)", "scale":0.9 },
-		"tab_plank_large":		{ "text":"Доска (L)", "scale":0.9 },
-		"tab_ball":				{ "text":"Мяч" },
-		"tab_trampoline":		{ "text":"Батут" },
-		"tab_anvil":			{ "text":"Наков-\nальня", "scale":0.9 },
-		"tab_cannonball":		{ "text":"Пушечное\nядро", "scale":0.8 },
-		"tab_balloon":			{ "text":"Шарик" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"Здание" },
+		"CatPicto_400":			{ "text":"Осень" },
+		"CatPicto_500":			{ "text":"Зима" },
+		"CatPicto_900":			{ "text":"День Святого\nВалентина", "scale":0.65 },
+		"CatPicto_150":			{ "text":"Море" },
+		"CatPicto_600":			{ "text":"Весна" },
+		"CatPicto_1000":		{ "text":"Разное" }
 	}
 }

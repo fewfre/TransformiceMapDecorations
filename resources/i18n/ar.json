@@ -14,14 +14,13 @@
 		"version":				{ "text":"الإصدار: {0}" },
 		"translated_by":		{ "text":"الترجمة من طرف: Hmiida" },
 		
-		"tab_box_small":		{ "text":"صندوق (ص)", "scale":0.95 },
-		"tab_box_large":		{ "text":"صندوق (ك)", "scale":0.95 },
-		"tab_plank_small":		{ "text":"اللوح (ص)" },
-		"tab_plank_large":		{ "text":"اللوح (ك)" },
-		"tab_ball":				{ "text":"الكرة" },
-		"tab_trampoline":		{ "text":"الترامبولين" },
-		"tab_anvil":			{ "text":"السندان" },
-		"tab_cannonball":		{ "text":"المدفع" },
-		"tab_balloon":			{ "text":"البالون" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"House" },
+		"CatPicto_400":			{ "text":"Autumn" },
+		"CatPicto_500":			{ "text":"Winter" },
+		"CatPicto_900":			{ "text":"Valentine's\nday", "scale":0.75 },
+		"CatPicto_150":			{ "text":"Sea" },
+		"CatPicto_600":			{ "text":"Spring" },
+		"CatPicto_1000":		{ "text":"Various" }
 	}
 }

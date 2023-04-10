@@ -14,14 +14,13 @@
 		"version":				{ "text":"Wersja: {0}" },
 		"translated_by":		{ "text":"Przetłumaczone przez: Akanaria" },
 		
-		"tab_box_small":		{ "text":"Pudło\n(małe)", "scale":0.9 },
-		"tab_box_large":		{ "text":"Pudło\n(duże)", "scale":0.9 },
-		"tab_plank_small":		{ "text":"Deska\n(mała)", "scale":0.9 },
-		"tab_plank_large":		{ "text":"Deska\n(duża)", "scale":0.9 },
-		"tab_ball":				{ "text":"Piłka" },
-		"tab_trampoline":		{ "text":"Trampolina", "scale":0.75 },
-		"tab_anvil":			{ "text":"Kowadło" },
-		"tab_cannonball":		{ "text":"Kule\narmatnie", "scale":0.9 },
-		"tab_balloon":			{ "text":"Balon" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"Dom" },
+		"CatPicto_400":			{ "text":"Jesień" },
+		"CatPicto_500":			{ "text":"Zima" },
+		"CatPicto_900":			{ "text":"Walentynki", "scale":0.75 },
+		"CatPicto_150":			{ "text":"Morze" },
+		"CatPicto_600":			{ "text":"Wiosna" },
+		"CatPicto_1000":		{ "text":"Różne" }
 	}
 }

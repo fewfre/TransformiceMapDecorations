@@ -14,14 +14,13 @@
 		"version":				{ "text":"Versão: {0}" },
 		"translated_by":		{ "text":"Traduzido por: Buwho" },
 		
-		"tab_box_small":		{ "text":"Caixa (p)", "scale":0.95 },
-		"tab_box_large":		{ "text":"Caixa (G)", "scale":0.95 },
-		"tab_plank_small":		{ "text":"Tábua (p)", "scale":0.95 },
-		"tab_plank_large":		{ "text":"Tábua (G)", "scale":0.95 },
-		"tab_ball":				{ "text":"Bola" },
-		"tab_trampoline":		{ "text":"Trampolim", "scale":0.75 },
-		"tab_anvil":			{ "text":"Bigorna" },
-		"tab_cannonball":		{ "text":"Canhão" },
-		"tab_balloon":			{ "text":"Balão" }
+		"CatPicto_100":			{ "text":"Transformice", "scale":0.7 },
+		"CatPicto_300":			{ "text":"Cafofo" },
+		"CatPicto_400":			{ "text":"Outono" },
+		"CatPicto_500":			{ "text":"Inverno" },
+		"CatPicto_900":			{ "text":"Dia de São\nValentim", "scale":0.75 },
+		"CatPicto_150":			{ "text":"Mar" },
+		"CatPicto_600":			{ "text":"Primavera", "scale":0.85 },
+		"CatPicto_1000":		{ "text":"Variados", "scale":0.95 }
 	}
 }
