@@ -10,6 +10,7 @@ package app.world
 	import app.ui.*;
 	import app.ui.common.*;
 	import app.ui.panes.*;
+	import app.ui.panes.colorpicker.*;
 	import app.ui.screens.*;
 	import app.ui.buttons.*;
 	import app.data.*;
@@ -26,8 +27,6 @@ package app.world
 	import flash.net.*;
 	import flash.utils.*;
 	import flash.display.MovieClip;
-	import app.ui.panes.ColorPickerTabPane;
-	import app.ui.panes.ColorFinderPane;
 	import flash.ui.Keyboard;
 	
 	public class World extends MovieClip
@@ -47,7 +46,6 @@ package app.world
 		public static const COLOR_PANE_ID = "colorPane";
 		public static const COLOR_FINDER_PANE_ID = "colorFinderPane";
 		public static const TAB_OTHER:String = "other";
-		// public static const CONFIG_COLOR_PANE_ID = "configColorPane";
 		
 		// Constructor
 		public function World(pStage:Stage) {
@@ -119,10 +117,10 @@ package app.world
 			*****************************/
 			var tPane = null;
 			
-			// tPane = _paneManager.addPane(COLOR_PANE_ID, new ColorPickerTabPane({}));
-			// tPane.addEventListener(ColorPickerTabPane.EVENT_COLOR_PICKED, _onColorPickChanged);
-			// tPane.addEventListener(ColorPickerTabPane.EVENT_DEFAULT_CLICKED, _onDefaultsButtonClicked);
-			// tPane.addEventListener(ColorPickerTabPane.EVENT_EXIT, _onColorPickerBackClicked);
+			tPane = _paneManager.addPane(COLOR_PANE_ID, new ColorPickerTabPane({}));
+			tPane.addEventListener(ColorPickerTabPane.EVENT_COLOR_PICKED, _onColorPickChanged);
+			tPane.addEventListener(ColorPickerTabPane.EVENT_DEFAULT_CLICKED, _onDefaultsButtonClicked);
+			tPane.addEventListener(ColorPickerTabPane.EVENT_EXIT, _onColorPickerBackClicked);
 			
 			tPane = _paneManager.addPane(COLOR_FINDER_PANE_ID, new ColorFinderPane({ }));
 			tPane.addEventListener(ColorFinderPane.EVENT_EXIT, _onColorFinderBackClicked);
@@ -143,7 +141,7 @@ package app.world
 			var tPane:TabPane = new TabPane();
 			tPane.addInfoBar( new ShopInfoBar({ showEyeDropButton:true, showGridManagementButtons:true }) );
 			_setupPaneButtons(pType, tPane, GameAssets.getItemDataListByType(pType));
-			// tPane.infoBar.colorWheel.addEventListener(ButtonBase.CLICK, function(){ _colorButtonClicked(pType); });
+			tPane.infoBar.colorWheel.addEventListener(ButtonBase.CLICK, function(){ _colorButtonClicked(pType); });
 			tPane.infoBar.removeItemOverlay.addEventListener(MouseEvent.CLICK, function(){ _removeItem(pType); });
 			// Grid Management Events
 			tPane.infoBar.randomizeButton.addEventListener(ButtonBase.CLICK, function(){ _randomItemOfType(pType); });
@@ -418,19 +416,23 @@ package app.world
 		//}END Get TabPane data
 
 		//{REGION Color Tab
-			// private function _onColorPickChanged(pEvent:FewfEvent):void
-			// {
-			// 	var tVal:uint = uint(pEvent.data);
-			// 	this.character.getItemData(this.currentlyColoringType).colors[(_paneManager.getPane(COLOR_PANE_ID) as ColorPickerTabPane).selectedSwatch] = tVal;
-			// 	_refreshSelectedItemColor();
-			// }
+			private function _onColorPickChanged(pEvent:FewfEvent):void {
+				var color:uint = uint(pEvent.data.color);
+				var pane = _paneManager.getPane(COLOR_PANE_ID) as ColorPickerTabPane;
+				if(pEvent.data.randomizedAll) {
+					this.character.getItemData(this.currentlyColoringType).colors = pane.getAllColors();
+				} else {
+					this.character.getItemData(this.currentlyColoringType).colors[pane.selectedSwatch] = color;
+				}
+				_refreshSelectedItemColor();
+			}
 
-			// private function _onDefaultsButtonClicked(pEvent:Event) : void
-			// {
-			// 	this.character.getItemData(this.currentlyColoringType).setColorsToDefault();
-			// 	_refreshSelectedItemColor();
-			// 	(_paneManager.getPane(COLOR_PANE_ID) as ColorPickerTabPane).setupSwatches( this.character.getColors(this.currentlyColoringType) );
-			// }
+			private function _onDefaultsButtonClicked(pEvent:Event) : void
+			{
+				this.character.getItemData(this.currentlyColoringType).setColorsToDefault();
+				_refreshSelectedItemColor();
+				(_paneManager.getPane(COLOR_PANE_ID) as ColorPickerTabPane).setupSwatches( this.character.getColors(this.currentlyColoringType) );
+			}
 			
 			private function _refreshSelectedItemColor() : void {
 				character.updateItem();
@@ -451,19 +453,19 @@ package app.world
 				}*/
 			}
 
-			// private function _colorButtonClicked(pType:String) : void {
-			// 	if(this.character.getItemData(this.currentlyColoringType) == null) { return; }
+			private function _colorButtonClicked(pType:CategoryType) : void {
+				if(this.character.getItemData(this.currentlyColoringType) == null) { return; }
 
-			// 	var tData:ItemData = getInfoBarByType(pType).data;
-			// 	_paneManager.getPane(COLOR_PANE_ID).infoBar.addInfo( tData, GameAssets.getItemImage(tData) );
-			// 	this.currentlyColoringType = pType;
-			// 	(_paneManager.getPane(COLOR_PANE_ID) as ColorPickerTabPane).setupSwatches( this.character.getColors(this.currentlyColoringType) );
-			// 	_paneManager.openPane(COLOR_PANE_ID);
-			// }
+				var tData:ItemData = getInfoBarByType(pType).data;
+				_paneManager.getPane(COLOR_PANE_ID).infoBar.addInfo( tData, GameAssets.getItemImage(tData) );
+				this.currentlyColoringType = pType;
+				(_paneManager.getPane(COLOR_PANE_ID) as ColorPickerTabPane).setupSwatches( this.character.getColors(this.currentlyColoringType) );
+				_paneManager.openPane(COLOR_PANE_ID);
+			}
 
-			// private function _onColorPickerBackClicked(pEvent:Event):void {
-			// 	_paneManager.openPane(_paneManager.getPane(COLOR_PANE_ID).infoBar.data.type.toString());
-			// }
+			private function _onColorPickerBackClicked(pEvent:Event):void {
+				_paneManager.openPane(_paneManager.getPane(COLOR_PANE_ID).infoBar.data.type.toString());
+			}
 
 			private function _eyeDropButtonClicked(pType:CategoryType) : void {
 				if(this.character.getItemData(pType) == null) { return; }

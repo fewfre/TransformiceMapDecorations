@@ -11,8 +11,8 @@ package app.world.data
 		public var itemClass	: Class;
 		public var classMap		: Object;
 
-		public var defaultColors: Array;
-		public var colors		: Array;
+		public var defaultColors: Vector.<uint>;
+		public var colors		: Vector.<uint>;
 
 		// pData = { itemClass:Class, ?classMap:Object<Class> }
 		public function ItemData(pType:CategoryType, pId:String, pData:Object) {
@@ -24,7 +24,7 @@ package app.world.data
 			_initDefaultColors();
 		}
 		protected function _initDefaultColors() : void {
-			defaultColors = GameAssets.getColors(GameAssets.colorDefault(new itemClass()));
+			defaultColors = GameAssets.findDefaultColors(new itemClass());
 			setColorsToDefault();
 		}
 		public function setColorsToDefault() : void {

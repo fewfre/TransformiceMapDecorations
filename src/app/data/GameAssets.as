@@ -114,78 +114,42 @@ package app.data
 		}
 
 		/****************************
-		* Color
+		* Color - GET
 		*****************************/
-		public static function copyColor(copyFromMC:MovieClip, copyToMC:MovieClip) : MovieClip {
-			if (copyFromMC == null || copyToMC == null) { return null; }
-			var tChild1:*=null;
-			var tChild2:*=null;
-			var i:int = 0;
-			while (i < copyFromMC.numChildren) {
-				tChild1 = copyFromMC.getChildAt(i);
-				tChild2 = copyToMC.getChildAt(i);
-				if (tChild1.name.indexOf("Couleur") == 0 && tChild1.name.length > 7) {
-					tChild2.transform.colorTransform = tChild1.transform.colorTransform;
-				}
-				i++;
-			}
-			return copyToMC;
+		public static function findDefaultColors(pMC:MovieClip) : Vector.<uint> {
+			return Vector.<uint>( _findDefaultColorsRecursive(pMC, []) );
 		}
+		private static function _findDefaultColorsRecursive(pMC:MovieClip, pList:Array) : Array {
+			if (!pMC) { return pList; }
 
-		public static function colorDefault(pMC:MovieClip) : MovieClip {
-			if (pMC == null) { return null; }
-
-			var tChild:*=null;
-			var tHex:int=0;
-			var i:int=0;
-			while (i < pMC.numChildren) {
-				tChild = pMC.getChildAt(i);
-				if (tChild.name.indexOf("Couleur") == 0 && tChild.name.length > 7)
-				{
-					// tHex = int("0x" + tChild.name.substr(tChild.name.indexOf("_") + 1, 6));
-					tHex = int("0x" + tChild.name.split("_")[1].substr(-6, 6));
-					applyColorToObject(tChild, tHex);
-				}
-				i++;
-			}
-			return pMC;
-		}
-
-		// pData = { obj:DisplayObject, color:String OR int, ?swatch:int, ?name:String, ?colors:Array<int> }
-		public static function colorItem(pData:Object) : DisplayObject {
-			if (pData.obj == null) { return null; }
-
-			var tHex:int = convertColorToNumber(pData.color);
-
-			var tChild:DisplayObject;
-			var i:int=0;
-			while (i < pData.obj.numChildren) {
-				tChild = pData.obj.getChildAt(i);
-				if (tChild.name == pData.name || (tChild.name.indexOf("Couleur") == 0 && tChild.name.length > 7)) {
-					if(pData.colors != null && pData.colors[tChild.name.charAt(7)] != null) {
-						applyColorToObject(tChild, convertColorToNumber(pData.colors[tChild.name.charAt(7)]));
+			var child:DisplayObject=null, name:String=null, colorI:int = 0;
+			var i:*=0;
+			while (i < pMC.numChildren)
+			{
+				child = pMC.getChildAt(i);
+				name = child.name;
+				
+				if(name) {
+					if (name.indexOf("Couleur") == 0 && name.length > 7) {
+						// hardcoded fix for tfm eye:31, which has a color of: Couleur_08C7474 (0 and _ are swapped)
+						if(name.charAt(7) == '_') {
+							colorI = int(name.charAt(8));
+							pList[colorI] = int("0x" + name.substr(name.indexOf("_") + 2, 6));
+						} else {
+							colorI = int(name.charAt(7));
+							pList[colorI] = int("0x" + name.substr(name.indexOf("_") + 1, 6));
+						}
 					}
-					else if (!pData.swatch || pData.swatch == tChild.name.charAt(7)) {
-						applyColorToObject(tChild, tHex);
+					else if(name.indexOf("slot_") == 0) {
+						_findDefaultColorsRecursive(child as MovieClip, pList);
 					}
+					i++;
 				}
-				i++;
 			}
-			return pData.obj;
-		}
-		public static function convertColorToNumber(pColor) : int {
-			return pColor is Number || pColor == null ? pColor : int("0x" + pColor);
+			return pList;
 		}
 		
-		// pColor is an int hex value. ex: 0x000000
-		public static function applyColorToObject(pItem:DisplayObject, pColor:int) : void {
-			if(pColor < 0) { return; }
-			var tR:*=pColor >> 16 & 255;
-			var tG:*=pColor >> 8 & 255;
-			var tB:*=pColor & 255;
-			pItem.transform.colorTransform = new flash.geom.ColorTransform(tR / 128, tG / 128, tB / 128);
-		}
-
+		
 		public static function getColors(pMC:MovieClip) : Array {
 			var tChild:*=null;
 			var tTransform:*=null;
@@ -204,21 +168,61 @@ package app.data
 		}
 
 		public static function getNumOfCustomColors(pMC:MovieClip) : int {
-			var tChild:*=null;
-			var num:int = 0;
+			// Use recursive one since the array it returns is a bit more safe for this than the vector
+			return _findDefaultColorsRecursive(pMC, []).length;
+		}
+
+		/****************************
+		* Color - APPLY
+		*****************************/
+		public static function copyColor(copyFromMC:MovieClip, copyToMC:MovieClip) : MovieClip {
+			if (copyFromMC == null || copyToMC == null) { return null; }
+			var tChild1:*=null;
+			var tChild2:*=null;
 			var i:int = 0;
-			while (i < pMC.numChildren) {
-				tChild = pMC.getChildAt(i);
-				if (tChild.name.indexOf("Couleur") == 0 && tChild.name.length > 7) {
-					num++;
+			while (i < copyFromMC.numChildren) {
+				tChild1 = copyFromMC.getChildAt(i);
+				tChild2 = copyToMC.getChildAt(i);
+				if (tChild1.name.indexOf("Couleur") == 0 && tChild1.name.length > 7) {
+					tChild2.transform.colorTransform = tChild1.transform.colorTransform;
 				}
 				i++;
 			}
-			return num;
+			return copyToMC;
 		}
 		
-		public static function getColoredItemImage(pData:ItemData) : MovieClip {
-			return colorItem({ obj:getItemImage(pData), colors:pData.colors }) as MovieClip;
+		// pColor is an int hex value. ex: 0x000000
+		public static function applyColorToObject(pItem:DisplayObject, pColor:int) : void {
+			if(pColor < 0) { return; }
+			var tR:*=pColor >> 16 & 255;
+			var tG:*=pColor >> 8 & 255;
+			var tB:*=pColor & 255;
+			pItem.transform.colorTransform = new flash.geom.ColorTransform(tR / 128, tG / 128, tB / 128);
+		}
+
+		public static function colorItemUsingColorList(pSprite:Sprite, pColors:Vector.<uint>) : DisplayObject {
+			if (pSprite == null) { return null; }
+
+			var tChild: DisplayObject, name:String;
+			var i:int=0;
+			while (i < pSprite.numChildren) {
+				tChild = pSprite.getChildAt(i); name = tChild.name;
+				
+				if (name.indexOf("Couleur") == 0 && name.length > 7) {
+					var colorI:int = int(name.charAt(7));
+					// fallback encase colorI is outside of the list
+					var color:uint = colorI < pColors.length ? pColors[colorI] : int("0x" + name.split("_")[1]);
+					applyColorToObject(tChild, color);
+				}
+				i++;
+			}
+			return pSprite;
+		}
+
+		public static function colorDefault(pMC:MovieClip) : MovieClip {
+			var colors:Vector.<uint> = findDefaultColors(pMC);
+			colorItemUsingColorList(pMC, colors);
+			return pMC;
 		}
 
 		/****************************
@@ -228,6 +232,10 @@ package app.data
 			var tItem:MovieClip = new pData.itemClass();
 			colorDefault(tItem);
 			return tItem;
+		}
+		
+		public static function getColoredItemImage(pData:ItemData) : MovieClip {
+			return colorItemUsingColorList(getItemImage(pData), pData.colors) as MovieClip;
 		}
 		
 		/****************************

@@ -53,14 +53,14 @@ package app.world.elements
 			for(var i:int = 0; i < outfit.numChildren; i++) {
 				tChild = outfit.getChildAt(i);
 				if(_itemData.colors != null) {
-					GameAssets.colorItem({ obj:tChild, colors:_itemData.colors });
+					GameAssets.colorItemUsingColorList(outfit, _itemData.colors);
 				}
 				else { GameAssets.colorDefault(tChild); }
 			}
 			tChild = null;*/
 			
 			if(_itemData.colors != null) {
-				GameAssets.colorItem({ obj:outfit, colors:_itemData.colors });
+				GameAssets.colorItemUsingColorList(outfit, _itemData.colors);
 			}
 			else { GameAssets.colorDefault(outfit); }
 			
@@ -125,13 +125,8 @@ package app.world.elements
 		/****************************
 		* Color
 		*****************************/
-		public function getColors(pType:String) : Array {
-			return _itemData.colors;
-		}
-
-		public function colorItem(pType:String, arg2:int, pColor:String) : void {
-			_itemData.colors[arg2] = GameAssets.convertColorToNumber(pColor);
-			updateItem();
+		public function getColors(pType:CategoryType) : Vector.<uint> {
+			return getItemData(pType).colors;
 		}
 
 		/****************************
