@@ -2,6 +2,7 @@
     "config":"flex",
     "type":"app",
     "compilerOptions": {
+		"source-path": ["src"],
         "output": "app2.swf",
 		"warnings": false,
 		"strict": true,
