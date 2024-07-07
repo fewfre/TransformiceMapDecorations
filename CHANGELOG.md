@@ -1,22 +1,23 @@
-== V1.4 - 9 April 2023 ==
+## V1.4 - 9 April 2023
 - Porting over TFM dressroom code changes from last few years
 - Added support for app to be openable in launcher
 - Decoration categories now supported
+- [Misc] (6 Jul 24) Converted changelog into markdown
 
 
-== V1.3 - 9 June 2018 ==
+## V1.3 - 9 June 2018
 - Code cleanup / validation for "strict" compilation
 - Small changes to code strucutre (including old file removal)
 - Re-added infobar download button (for consitent name/scale for wiki)
 
 
-== V1.2 - 16 December 2017 ==
+## V1.2 - 16 December 2017
 - Increased color swatches to 10 so there are enough for all items.
 - Item resource swfs now loaded based on config.json
 - Renamed "Costumes" to "GameAssets" and changed it from a singleton to a static class.
 
 
-== V1.1 - 6 September 2017 ==
+## V1.1 - 6 September 2017
 - Adding various languages
 - Moved over TFM Dressroom rework:
 	- V1.5
@@ -45,5 +46,5 @@
 		- Imgur upload option added.
 		- Resources are no longer cached.
 
-== V1.0 - 4 July 2017 ==
+## V1.0 - 4 July 2017
 - Initial (rough) Commit - fully functional
