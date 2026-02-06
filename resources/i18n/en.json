@@ -31,6 +31,11 @@
 		
 		"loading":				{ "text":"Items left to load: {0}" },
 		"loading_finished":		{ "text":"Loading complete. Initializing..." },
-		"loading_progress":		{ "text":"{0}" }
+		"loading_progress":		{ "text":"{0}" },
+	
+		"setting_hardcoded_save_scale_label":       { "text":"Hardcoded save scale" },
+		"setting_hardcoded_save_scale_placeholder": { "text":"App uses 1-8 (default: 1.75)" },
+		"setting_hardcoded_save_size_label":        { "text":"Hardcoded PNG save size" },
+		"setting_hardcoded_save_size_placeholder":  { "text":"Leave blank to auto fit" }
 	}
 }

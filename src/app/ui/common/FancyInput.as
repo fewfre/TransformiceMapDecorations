@@ -1,13 +1,13 @@
 package app.ui.common
 {
 	import com.fewfre.display.TextBase;
-	import flash.display.MovieClip;
-	import flash.text.TextField;
-	import flash.text.TextFieldType;
+	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.FocusEvent;
+	import flash.text.TextField;
+	import flash.text.TextFieldType;
 	
-	public class FancyInput extends MovieClip
+	public class FancyInput extends Sprite
 	{
 		// Storage
 		private var _textField			: TextField;
@@ -20,10 +20,8 @@ package app.ui.common
 		public function get placeholderTextBase() : TextBase { return _placeholderText; }
 		
 		// Constructor
-		// pData = { text?:String, placeholder?:String, x:Number, y:Number, width?:Number, height?:Number=18, padding?:Number=5 }
+		// pData = { width?:Number, height?:Number=18, padding?:Number=5 }
 		public function FancyInput(pData:Object) {
-			this.x = pData.x;
-			this.y = pData.y;
 			var padding = pData.padding != null ? pData.padding : 5;
 			
 			var tTFWidth:Number = pData.width ? pData.width : 250;
@@ -40,11 +38,9 @@ package app.ui.common
 			_textField.x = padding - tTextBackground.Width*0.5;
 			_textField.y = padding - tTextBackground.Height*0.5;
 			
-			_placeholderText = tTextBackground.addChild(new TextBase({ text:pData.placeholder, originX:0, x:_textField.x+4, color:0x666666 })) as TextBase;
+			_placeholderText = tTextBackground.addChild(new TextBase({ text:"", originX:0, x:_textField.x+4, color:0x666666 })) as TextBase;
 			_placeholderText.mouseChildren = false;
 			_placeholderText.mouseEnabled = false;
-			
-			setText(pData.text || "");
 			
 			_textField.addEventListener(FocusEvent.FOCUS_IN, _onFocusIn);
 			_textField.addEventListener(FocusEvent.FOCUS_OUT, _onFocusOut);
@@ -52,6 +48,10 @@ package app.ui.common
 			_textField.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, _onFocusOut);
 			_textField.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, _onFocusOut);
 		}
+		public function move(pX:Number, pY:Number) : FancyInput { this.x = pX; this.y = pY; return this; }
+		public function appendTo(pParent:Sprite): FancyInput { pParent.addChild(this); return this; }
+		public function on_field(type:String, listener:Function): FancyInput { _textField.addEventListener(type, listener); return this; }
+		public function off_field(type:String, listener:Function): FancyInput { _textField.removeEventListener(type, listener); return this; }
 		
 		protected function _onFocusIn(event:Event):void {
 			_placeholderText.alpha = 0;
@@ -68,9 +68,15 @@ package app.ui.common
 			_textField.stage.focus = null;
 		}
 		
-		public function setText(pVal:String) : void {
+		public function setText(pVal:String) : FancyInput {
 			_textField.text = pVal;
 			_placeholderText.alpha = _textField.text == "" ? 1 : 0;
+			return this;
 		}
+		
+		public function setPlaceholderText(pText:String) : FancyInput { _placeholderText.setText(pText); return this; }
+		public function setPlaceholderUntranslatedText(pText:String) : FancyInput { _placeholderText.setUntranslatedText(pText); return this; }
+		
+		public function setRestrict(pRestrict:String): FancyInput { _textField.restrict = pRestrict; return this; }
 	}
 }

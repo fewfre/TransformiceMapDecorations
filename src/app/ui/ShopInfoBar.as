@@ -157,8 +157,8 @@ package app.ui
 			downloadButton.addEventListener(ButtonBase.CLICK, saveSprite);
 			downloadButton.disable().alpha = 0;
 			
-			// Line seperating infobar and contents below it.
-			addChild( GameAssets.createHorizontalRule(5, 53, this.Width-10) );
+			// Line separating infobar and contents below it
+			GameAssets.createHorizontalRule(5, 53, this.Width-10).appendTo(this);
 		}
 
 		public function ChangeImage(pMC:MovieClip) : void {

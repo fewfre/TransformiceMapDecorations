@@ -44,7 +44,7 @@ package app.world.elements
 		}
 
 		public function updateItem() {
-			var tScale = 1.75;
+			var tScale = ConstantsApp.DEFAULT_CHARACTER_SCALE;
 			if(outfit != null) { tScale = outfit.scaleX; removeChild(outfit); }
 			outfit = addChild(new (_itemData.itemClass)()) as MovieClip;
 			outfit.scaleX = outfit.scaleY = tScale;

@@ -28,6 +28,7 @@ package app.world
 	import flash.utils.*;
 	import flash.display.MovieClip;
 	import flash.ui.Keyboard;
+	import ext.ParentApp;
 	
 	public class World extends MovieClip
 	{
@@ -39,6 +40,7 @@ package app.world
 		internal var _toolbox		: Toolbox;
 		// internal var linkTray		: LinkTray;
 		internal var _langScreen	: LangScreen;
+		private var _aboutScreen    : AboutScreen;
 
 		internal var currentlyColoringType:CategoryType=null;
 		
@@ -79,7 +81,7 @@ package app.world
 			/****************************
 			* Setup UI
 			*****************************/
-			var tShop:RoundedRectangle = new RoundedRectangle({ x:450, y:10, width:ConstantsApp.SHOP_WIDTH, height:ConstantsApp.APP_HEIGHT })
+			var tShop:RoundedRectangle = new RoundedRectangle({ x:450, y:10, width:ConstantsApp.SHOP_WIDTH, height:ConstantsApp.SHOP_HEIGHT })
 				.appendTo(this).drawAsTray();
 			_paneManager = tShop.addChild(new PaneManager()) as PaneManager;
 			
@@ -88,7 +90,7 @@ package app.world
 				tabs.push({ text:tType.toString(), event:tType.toString() });
 			}
 			
-			this.shopTabs = new ShopTabList(70, ConstantsApp.APP_HEIGHT, tabs).setXY(375, 10).appendTo(this);
+			this.shopTabs = new ShopTabList(70, ConstantsApp.SHOP_HEIGHT, tabs).setXY(375, 10).appendTo(this);
 			this.shopTabs.addEventListener(ShopTabList.TAB_CLICKED, _onTabClicked);
 
 			// Toolbox
@@ -101,7 +103,16 @@ package app.world
 			var tLangButton = addChild(new LangButton({ x:22, y:pStage.stageHeight-17, width:30, height:25, origin:0.5 }));
 			tLangButton.addEventListener(ButtonBase.CLICK, _onLangButtonClicked);
 			
-			addChild(new AppInfoBox({ x:tLangButton.x+(tLangButton.Width*0.5)+(25*0.5)+2, y:pStage.stageHeight-17 }));
+			// About Screen Button
+			var aboutButton:GameButton = new GameButton({ width:25, height:25, origin:0.5 }).move(tLangButton.x+(tLangButton.Width/2)+2+(25/2), ConstantsApp.APP_HEIGHT - 17).appendTo(this)
+				.onButtonClick(_onAboutButtonClicked) as GameButton;
+			new TextBase({ size:22, color:0xFFFFFF, bold:true, origin:0.5 }).move(0, -1).appendTo(aboutButton).setUntranslatedText("?");
+			
+			if(!!(ParentApp.reopenSelectionLauncher())) {
+				new ScaleButton({ obj:new $BackArrow(), obj_scale:0.5 }).appendTo(this)
+					.move(22, ConstantsApp.APP_HEIGHT-17-28)
+					.onButtonClick(function():void{ ParentApp.reopenSelectionLauncher()(); });
+			}
 			
 			/****************************
 			* Screens
@@ -111,6 +122,9 @@ package app.world
 			
 			_langScreen = new LangScreen({  });
 			_langScreen.addEventListener(LangScreen.CLOSE, _onLangScreenClosed);
+			
+			_aboutScreen = new AboutScreen();
+			_aboutScreen.addEventListener(Event.CLOSE, _onAboutScreenClosed);
 			
 			/****************************
 			* Create tabs and panes
@@ -281,10 +295,27 @@ package app.world
 			// }
 			// _toolbox.toggleAnimateButtonAsset(character.animatePose);
 		}
+		
+	//#region Saving
+		private function _getHardcodedSaveScale() : Number {
+			var hardcodedSaveScale:Object = Fewf.sharedObject.getData(ConstantsApp.SHARED_OBJECT_KEY_HARDCODED_SAVE_SCALE);
+			return hardcodedSaveScale ? hardcodedSaveScale as Number : 0;
+		}
 
 		private function _onSaveClicked(pEvent:Event) : void {
-			FewfDisplayUtils.saveAsPNG(this.character, "decoration");
+			_saveAsPNG(this.character, "decoration", this.character.scaleX);
 		}
+		
+		private function _saveAsPNG(pObj:DisplayObject, pName:String, pScale:Number) : void {
+			pScale = _getHardcodedSaveScale() || pScale;
+			var hardcodedCanvasSaveSize:Object = Fewf.sharedObject.getData(ConstantsApp.SHARED_OBJECT_KEY_HARDCODED_CANVAS_SAVE_SIZE);
+			if(!hardcodedCanvasSaveSize) {
+				FewfDisplayUtils.saveAsPNG(pObj, pName, pScale);
+			} else {
+				FewfDisplayUtils.saveAsPNGWithFixedCanvasSize(pObj, pName, hardcodedCanvasSaveSize as Number, pScale, 0, 0);
+			}
+		}
+	//#endregion Saving
 
 		private function _onItemToggled(pEvent:FewfEvent) : void {
 			var tType:CategoryType = pEvent.data.type;
@@ -391,6 +422,15 @@ package app.world
 
 		private function _onLangScreenClosed(pEvent:Event) : void {
 			removeChild(_langScreen);
+		}
+
+		private function _onAboutButtonClicked(e:Event) : void {
+			_aboutScreen.open();
+			addChild(_aboutScreen);
+		}
+
+		private function _onAboutScreenClosed(e:Event) : void {
+			removeChild(_aboutScreen);
 		}
 
 		//{REGION Get TabPane data

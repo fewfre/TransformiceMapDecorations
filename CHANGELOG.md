@@ -1,3 +1,10 @@
+## V1.5 - 5 February 2026
+- Added About screen, which can be accessed by clicking "?" button on bottom left
+	- Replaces the version text that was there before, with version text being moved into the about screen
+	- About screen has a discord/github button
+	- About screen has 2 settings available for hardcoded scale and hardcoded save size
+- Imgur button updated to use external server script instead of an in-app file
+
 ## V1.4 - 9 April 2023
 - Porting over TFM dressroom code changes from last few years
 - Added support for app to be openable in launcher

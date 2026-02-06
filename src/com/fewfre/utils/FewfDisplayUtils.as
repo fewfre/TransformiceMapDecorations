@@ -58,6 +58,32 @@ package com.fewfre.utils
 			return pObj;
 		}
 		
+		/**
+		 * If an origin is set to null, it won't be touched
+		 */
+		public static function alignChildrenAroundAnchor(pSprite:Sprite, originX:Object=0.5, originY:Object=0.5, pDrawScaffolding:Boolean=false) : Sprite {
+			var rect:Rectangle = pSprite.getBounds(pSprite);
+			var offsetX:Number = originX != null ? -rect.width*(originX as Number) - rect.x : 0;
+			var offsetY:Number = originY != null ? -rect.height*(originY as Number) - rect.y : 0;
+			
+			for(var i:int = 0; i < pSprite.numChildren; i++) {
+				if(originX) pSprite.getChildAt(i).x += offsetX;
+				if(originY) pSprite.getChildAt(i).y += offsetY;
+			}
+			
+			if(pDrawScaffolding) {
+				trace(rect.toString());
+				pSprite.graphics.beginFill(0xFFFFFF);
+				pSprite.graphics.lineStyle(1, 0xFFFFFF)
+				pSprite.graphics.drawCircle(0, 0, 4);
+				pSprite.graphics.moveTo(0, -32); pSprite.graphics.lineTo(0, 32);
+				pSprite.graphics.moveTo(-32, 0); pSprite.graphics.lineTo(32, 0);
+				pSprite.graphics.endFill();
+			}
+			
+			return pSprite;
+		}
+		
 		public static function handleErrorMessage(e:Error) : void {
 			// var text:TextBase = new TextBase({ color:0xFF0000, x:Fewf.stage.stageWidth*0.25, y:Fewf.stage.stageHeight-25 });
 			// text.setUntranslatedText("["+e.name+":"+e.errorID+"] "+e.message);
@@ -201,19 +227,42 @@ package com.fewfre.utils
 			
 		// }
 		
+		public static function displayObjectToBitmapData(pObj:DisplayObject, pScale:Number=1) : BitmapData {
+			var tOrigScale = pObj.scaleX;
+			pObj.scaleX = pObj.scaleY = pScale;
+			
+			var rect:Rectangle = pObj.getBounds(pObj);
+			var tBitmapData:BitmapData = new BitmapData(rect.width*pScale, rect.height*pScale, true, 0xFFFFFF);
+
+			var tMatrix:Matrix = new Matrix(1, 0, 0, 1, -rect.left, -rect.top);
+			tMatrix.scale(pScale, pScale);
+			bitmapDataDrawBestQuality(tBitmapData, pObj, tMatrix);
+			
+			pObj.scaleX = pObj.scaleY = tOrigScale;
+			return tBitmapData;
+		}
+		
 		// Converts the image to a PNG bitmap and prompts the user to save.
 		public static function saveAsPNG(pObj:DisplayObject, pName:String, pScale:Number=1) : void {
 			if(!pObj){ return; }
-
-			var tRect:Rectangle = pObj.getBounds(pObj);
-			var tBitmap:BitmapData = new BitmapData(tRect.width*pScale, tRect.height*pScale, true, 0xFFFFFF);
-
-			var tMatrix:Matrix = new Matrix(1, 0, 0, 1, -tRect.left, -tRect.top);
+			var tBitmapData:BitmapData = displayObjectToBitmapData(pObj, pScale);
+			saveImageDataToDevice(tBitmapData, pName, 'png');
+		}
+		
+		public static function displayObjectToBitmapDataFixedCanvasSize(pObj:DisplayObject, pSize:Number, pScale:Number, pOffsetX:Number=0, pOffsetY:Number=0) : BitmapData {
+			var tBitmapData:BitmapData = new BitmapData(pSize, pSize, true, 0xFFFFFF);
+			var tMatrix:Matrix = new Matrix(1, 0, 0, 1, 0, 0);
 			tMatrix.scale(pScale, pScale);
-
-			bitmapDataDrawBestQuality(tBitmap, pObj, tMatrix);
-			
-			saveImageDataToDevice(tBitmap, pName, 'png');
+			tMatrix.translate(pSize/2+pOffsetX, pSize/2+(pOffsetY*pScale));
+			bitmapDataDrawBestQuality(tBitmapData, pObj, tMatrix);
+			return tBitmapData;
+		}
+		
+		// Converts the image to a PNG bitmap and prompts the user to save.
+		public static function saveAsPNGWithFixedCanvasSize(pObj:DisplayObject, pName:String, pSize:Number, pScale:Number, pOffsetX:Number=0, pOffsetY:Number=0) : void {
+			if(!pObj){ return; }
+			var tBitmapData:BitmapData = displayObjectToBitmapDataFixedCanvasSize(pObj, pSize, pScale, pOffsetX, pOffsetY);
+			saveImageDataToDevice(tBitmapData, pName, "png");
 		}
 		
 		public static function convertMovieClipToSpriteSheet(mc:MovieClip, scale:Number=1, bg:int=-1) : SpritesheetData {
@@ -345,6 +394,31 @@ package com.fewfre.utils
 			try {
 				urlLoader.load(request);
 			} catch (e:Error) { pCallback(null, e); }
+		}
+		
+		// https://stackoverflow.com/a/24896808/1411473
+		private static const ENCODE_CHARS : String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+		public static function encodeByteArrayAsString(bytes:ByteArray):String{
+			var encodeChars:Array = ENCODE_CHARS.split("");
+			var out:Array = [];
+			var i:int = 0;
+			var j:int = 0;
+			var r:int = bytes.length % 3;
+			var len:int = bytes.length - r;
+			var c:int;
+			while (i < len) {
+				c = bytes[i++] << 16 | bytes[i++] << 8 | bytes[i++];
+				out[j++] = encodeChars[c >> 18] + encodeChars[c >> 12 & 0x3f] + encodeChars[c >> 6 & 0x3f] + encodeChars[c & 0x3f];
+			}
+			if (r == 1) {
+				c = bytes[i++];
+				out[j++] = encodeChars[c >> 2] + encodeChars[(c & 0x03) << 4] + "==";
+			}
+			else if (r == 2) {
+				c = bytes[i++] << 8 | bytes[i++];
+				out[j++] = encodeChars[c >> 10] + encodeChars[c >> 4 & 0x3f] + encodeChars[(c & 0x0f) << 2] + "=";
+			}
+			return out.join('');
 		}
 	}
 }

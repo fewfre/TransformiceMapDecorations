@@ -21,6 +21,11 @@
 		"CatPicto_900":			{ "text":"Valentīn\n-diena", "scale":0.8 },
 		"CatPicto_150":			{ "text":"Jūra" },
 		"CatPicto_600":			{ "text":"Pavasaris", "scale":0.9 },
-		"CatPicto_1000":		{ "text":"Dažādi" }
+		"CatPicto_1000":		{ "text":"Dažādi" },
+	
+		"setting_hardcoded_save_scale_label":       { "text":"Hardcoded save scale" },
+		"setting_hardcoded_save_scale_placeholder": { "text":"App uses 1-8 (default: 1.75)" },
+		"setting_hardcoded_save_size_label":        { "text":"Hardcoded PNG save size" },
+		"setting_hardcoded_save_size_placeholder":  { "text":"Leave blank to auto fit" }
 	}
 }

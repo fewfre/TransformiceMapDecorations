@@ -11,6 +11,10 @@ package app.ui
 	import app.world.elements.CustomItem;
 	import com.fewfre.utils.FewfDisplayUtils;
 	import flash.utils.setTimeout;
+	import flash.events.Event;
+	import flash.utils.ByteArray;
+	import com.adobe.images.PNGEncoder;
+	import com.fewfre.loaders.SimpleUrlLoader;
 	
 	public class Toolbox extends MovieClip
 	{
@@ -61,14 +65,13 @@ package app.ui
 			btn.addEventListener(ButtonBase.CLICK, pData.onShare);
 			tButtonsOnLeft++;*/
 			
-			if(!Fewf.isExternallyLoaded) {
+			if(!!_getImgurUploadUrl()) {
 				btn = imgurButton = tTray.addChild(new SpriteButton({ x:tX+tButtonXInc*tButtonsOnLeft, y:tY, width:tButtonSize, height:tButtonSize, obj_scale:0.45, obj:new $ImgurIcon(), origin:0.5 })) as SpriteButton;
-				btn.addEventListener(ButtonBase.CLICK, function(e:*){
-					ImgurApi.uploadImage(_character);
-					imgurButton.disable();
-				});
+				btn.onButtonClick(_onImgurButtonClicked);
 				tButtonsOnLeft++;
-			} else {
+			}
+			
+			if(Fewf.isExternallyLoaded){
 				btn = imgurButton = tTray.addChild(new SpriteButton({ x:tX+tButtonXInc*tButtonsOnLeft, y:tY, width:tButtonSize, height:tButtonSize, obj_scale:0.415, obj:new $CopyIcon(), origin:0.5 })) as SpriteButton;
 				btn.addEventListener(ButtonBase.CLICK, function(e:*){
 					try {
@@ -101,24 +104,36 @@ package app.ui
 			var tSliderWidth = tTrayWidth - tButtonXInc*(tTotalButtons) - 20;
 			tX = -tSliderWidth*0.5+(tButtonXInc*((tButtonsOnLeft-tButtonOnRight)*0.5))-1;
 			scaleSlider = new FancySlider(tSliderWidth).setXY(tX, tY)
-				.setSliderParams(1, 8, pData.character.outfit.scaleX)
+				.setSliderParams(1, 8, ConstantsApp.DEFAULT_CHARACTER_SCALE)
 				.appendTo(tTray);
 			scaleSlider.addEventListener(FancySlider.CHANGE, pData.onScale);
 			
 			pData = null;
-			
-			/********************
-			* Events
-			*********************/
-			Fewf.dispatcher.addEventListener(ImgurApi.EVENT_DONE, _onImgurDone);
 		}
 		
 		public function toggleAnimateButtonAsset(pOn:Boolean) : void {
 			animateButton.ChangeImage(pOn ? new $PauseButton() : new $PlayButton());
 		}
 		
-		private function _onImgurDone(e:*) : void {
-			imgurButton.enable();
+		///////////////////////
+		// Imgur
+		///////////////////////
+		private function _getImgurUploadUrl() : String { return Fewf.assets.getData("config").upload2imgur_url; }
+		
+		private function _onImgurButtonClicked(e:Event) : void {
+			imgurButton.disable();
+			_uploadToImgur(_character, function(pResp, err:String=null):void{
+				imgurButton.enable();
+			});
+		}
+		
+		private function _uploadToImgur(img:Sprite, pCallback:Function) : void {
+			var tPNG:ByteArray = PNGEncoder.encode(FewfDisplayUtils.displayObjectToBitmapData(img, img.scaleX));
+			new SimpleUrlLoader(_getImgurUploadUrl()).setToPost().addFormDataHeader()
+				.addData("base64", FewfDisplayUtils.encodeByteArrayAsString(tPNG))
+				.onComplete(function(resp){ pCallback(resp); })
+				.onError(function(err:Error){ pCallback(null, "["+err.name+":"+err.errorID+"] "+err.message); })
+				.load();
 		}
 	}
 }

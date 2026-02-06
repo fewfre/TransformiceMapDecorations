@@ -21,6 +21,11 @@
 		"CatPicto_900":			{ "text":"День Святого\nВалентина", "scale":0.65 },
 		"CatPicto_150":			{ "text":"Море" },
 		"CatPicto_600":			{ "text":"Весна" },
-		"CatPicto_1000":		{ "text":"Разное" }
+		"CatPicto_1000":		{ "text":"Разное" },
+	
+		"setting_hardcoded_save_scale_label":       { "text":"Hardcoded save scale" },
+		"setting_hardcoded_save_scale_placeholder": { "text":"App uses 1-8 (default: 1.75)" },
+		"setting_hardcoded_save_size_label":        { "text":"Hardcoded PNG save size" },
+		"setting_hardcoded_save_size_placeholder":  { "text":"Leave blank to auto fit" }
 	}
 }

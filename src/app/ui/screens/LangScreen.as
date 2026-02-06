@@ -28,13 +28,7 @@ package app.ui.screens
 			/****************************
 			* Click Tray
 			*****************************/
-			var tClickTray = addChild(new Sprite());
-			tClickTray.x = -5000;
-			tClickTray.y = -5000;
-			tClickTray.graphics.beginFill(0x000000, 0.2);
-			tClickTray.graphics.drawRect(0, 0, -tClickTray.x*2, -tClickTray.y*2);
-			tClickTray.graphics.endFill();
-			tClickTray.addEventListener(MouseEvent.CLICK, _onCloseClicked);
+			GameAssets.createScreenBackdrop().appendTo(this).on(MouseEvent.CLICK, _onCloseClicked);
 			
 			/****************************
 			* Background
