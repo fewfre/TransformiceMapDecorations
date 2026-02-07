@@ -4,7 +4,6 @@ package app.ui.panes
 	import app.ui.*;
 	import app.ui.buttons.*;
 	import app.ui.common.*;
-	import com.fewfre.display.*;
 	import com.fewfre.utils.*;
 	import flash.display.*;
 	import flash.events.*;
@@ -100,10 +99,10 @@ package app.ui.panes
 			*********************/
 			var tSliderWidth = ConstantsApp.PANE_WIDTH * 0.4;
 			_scaleSlider = new FancySlider(tSliderWidth)
-				.setXY(-tSliderWidth*0.5, -110)
+				.move(-tSliderWidth*0.5, -110)
 				.setSliderParams(1, 5, 1)
-				.appendTo(_tray);
-			_scaleSlider.addEventListener(FancySlider.CHANGE, _onSliderChange);
+				.appendTo(_tray)
+				.on(FancySlider.CHANGE, _onSliderChange);
 			
 			// Attach scroll event to back to detect scroll anywhere on pane
 			// and also attach to item since it ignores the other scroll event if mouse over it
@@ -169,7 +168,7 @@ package app.ui.panes
 			fileRef.addEventListener(Event.COMPLETE, _onFileSelect);
 			
 			var selectImageBtn = new ScaleButton({ x:ConstantsApp.PANE_WIDTH*0.5 - 30, y: -_tray.y + 60 + 20, obj:new $Folder(), obj_scale:1 });
-			selectImageBtn.addEventListener(ButtonBase.CLICK, function(){
+			selectImageBtn.onButtonClick(function(){
 				fileRef.browse([new FileFilter("Images", "*.jpg;*.jpeg;*.gif;*.png")]);
 			});
 			_tray.addChild(selectImageBtn);

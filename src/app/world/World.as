@@ -1,12 +1,5 @@
 package app.world
 {
-	import com.adobe.images.*;
-	import com.piterwilson.utils.*;
-	import com.fewfre.utils.AssetManager;
-	import com.fewfre.display.*;
-	import com.fewfre.events.*;
-	import com.fewfre.utils.*;
-
 	import app.ui.*;
 	import app.ui.common.*;
 	import app.ui.panes.*;
@@ -16,21 +9,24 @@ package app.world
 	import app.data.*;
 	import app.world.data.*;
 	import app.world.elements.*;
+	
+	import com.adobe.images.*;
+	import com.piterwilson.utils.*;
+	import com.fewfre.utils.AssetManager;
+	import com.fewfre.display.*;
+	import com.fewfre.events.FewfEvent;
+	import com.fewfre.utils.*;
+	import ext.ParentApp;
 
-	import fl.controls.*;
-	import fl.events.*;
 	import flash.display.*;
-	import flash.text.*;
 	import flash.events.*
-	import flash.external.*;
-	import flash.geom.*;
-	import flash.net.*;
-	import flash.utils.*;
+	import flash.external.ExternalInterface;
 	import flash.display.MovieClip;
 	import flash.ui.Keyboard;
-	import ext.ParentApp;
+	import flash.utils.setTimeout;
+	import flash.net.URLVariables;
 	
-	public class World extends MovieClip
+	public class World extends Sprite
 	{
 		// Storage
 		internal var character		: CustomItem;
@@ -63,12 +59,12 @@ package app.world
 			/****************************
 			* Create CustomItem
 			*****************************/
-			var parms:flash.net.URLVariables = null;
+			var parms:URLVariables = null;
 			try {
 				var urlPath:String = ExternalInterface.call("eval", "window.location.href");
 				if(urlPath && urlPath.indexOf("?") > 0) {
 					urlPath = urlPath.substr(urlPath.indexOf("?") + 1, urlPath.length);
-					parms = new flash.net.URLVariables();
+					parms = new URLVariables();
 					parms.decode(urlPath);
 				}
 			} catch (error:Error) { };
@@ -100,8 +96,12 @@ package app.world
 				onScale:_onScaleSliderChange // onShare:_onShareButtonClicked, 
 			})) as Toolbox;
 			
-			var tLangButton = addChild(new LangButton({ x:22, y:pStage.stageHeight-17, width:30, height:25, origin:0.5 }));
-			tLangButton.addEventListener(ButtonBase.CLICK, _onLangButtonClicked);
+			/////////////////////////////
+			// Bottom Left Area
+			/////////////////////////////
+			var tLangButton:SpriteButton = LangScreen.createLangButton({ width:30, height:25, origin:0.5 })
+				.move(22, pStage.stageHeight-17).appendTo(this)
+				.onButtonClick(_onLangButtonClicked) as SpriteButton;
 			
 			// About Screen Button
 			var aboutButton:GameButton = new GameButton({ width:25, height:25, origin:0.5 }).move(tLangButton.x+(tLangButton.Width/2)+2+(25/2), ConstantsApp.APP_HEIGHT - 17).appendTo(this)

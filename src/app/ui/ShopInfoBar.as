@@ -1,6 +1,6 @@
 package app.ui
 {
-	import com.fewfre.display.*;
+	import com.fewfre.display.TextBase;
 	import com.fewfre.utils.*;
 	import com.adobe.images.*;
 	import app.data.*;
@@ -154,7 +154,7 @@ package app.ui
 			* Right Side Buttons
 			*********************/
 			downloadButton = addChild(new SpriteButton({ x:this.Width-BTN_SIZE, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.45, obj:new $SimpleDownload() })) as SpriteButton;
-			downloadButton.addEventListener(ButtonBase.CLICK, saveSprite);
+			downloadButton.onButtonClick(saveSprite);
 			downloadButton.disable().alpha = 0;
 			
 			// Line separating infobar and contents below it

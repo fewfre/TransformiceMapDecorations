@@ -58,5 +58,22 @@ package app.ui.buttons
 			if(this.Text) this.Text.color = 0xC2C2DA;
 			super._renderOut();
 		}
+		
+		/////////////////////////////
+		// Static
+		/////////////////////////////
+		public static function withObject(pObj:DisplayObject, pScale:Object=null, pData:Object=null) : SpriteButton {
+			pData = pData || {};
+			pData.obj = pObj;
+			pData.obj_scale = pScale;
+			return new SpriteButton(pData);
+		}
+		
+		public static function square(pSize:Number) : SpriteButton {
+			return new SpriteButton({ size:pSize });
+		}
+		public static function rect(pWidth:Number, pHeight:Number) : SpriteButton {
+			return new SpriteButton({ width:pWidth, height:pHeight });
+		}
 	}
 }

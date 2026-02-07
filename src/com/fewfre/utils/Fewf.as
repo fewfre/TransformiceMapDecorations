@@ -1,6 +1,7 @@
 package com.fewfre.utils
 {
-	import flash.display.MovieClip;
+	import com.fewfre.data.I18n;
+	import com.fewfre.data.SharedObjectManager;
 	import flash.display.Stage;
 	import flash.events.EventDispatcher;
 	

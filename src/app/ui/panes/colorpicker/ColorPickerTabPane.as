@@ -1,7 +1,7 @@
 package app.ui.panes.colorpicker
 {
 	import com.piterwilson.utils.*;
-	import com.fewfre.display.*;
+	import com.fewfre.display.TextBase;
 	import com.fewfre.events.FewfEvent;
 	import app.data.*;
 	import app.ui.*;
@@ -65,11 +65,11 @@ package app.ui.panes.colorpicker
 			if(!pData.hide_default) {
 				var defaults_btn:SpriteButton;
 				defaults_btn = this.addItem( new SpriteButton({ text:"btn_color_defaults", x:6, y:15, width:100, height:22, obj:new MovieClip() }) ) as SpriteButton;
-				defaults_btn.addEventListener(ButtonBase.CLICK, _onDefaultButtonClicked);
+				defaults_btn.onButtonClick(_onDefaultButtonClicked);
 			}
 			
 			_randomizeButton = this.addItem(new SpriteButton({ x:ConstantsApp.PANE_WIDTH - 24 - 11, y:14, width:24, height:24, obj_scale:0.8, obj:new $Dice() })) as SpriteButton;
-			_randomizeButton.addEventListener(ButtonBase.CLICK, function(){ _randomizeAllColors(); });
+			_randomizeButton.onButtonClick(function(){ _randomizeAllColors(); });
 			
 			_recentColorsDisplay = new RecentColorsListDisplay({ x:ConstantsApp.PANE_WIDTH/2, y:316+60+17 });
 			_recentColorsDisplay.addEventListener(RecentColorsListDisplay.EVENT_COLOR_PICKED, _onRecentColorBtnClicked);

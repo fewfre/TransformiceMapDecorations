@@ -361,7 +361,7 @@ package com.fewfre.utils
 			
 			var requestVars:URLVariables = new URLVariables();
 			// requestVars.sheet = tPNG;
-			requestVars.sheet_base64 = ImgurApi.encodeByteArray(tPNG);
+			requestVars.sheet_base64 = encodeByteArrayAsString(tPNG);
 			requestVars.width = sheetData.frameWidth;
 			requestVars.height = sheetData.frameHeight;
 			requestVars.framescount = sheetData.framesCount;

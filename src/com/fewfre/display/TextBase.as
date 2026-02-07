@@ -1,5 +1,6 @@
 package com.fewfre.display
 {
+	import com.fewfre.data.I18n;
 	import com.fewfre.events.*;
 	import com.fewfre.utils.*;
 	import flash.display.*;

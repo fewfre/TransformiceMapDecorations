@@ -3,7 +3,6 @@ package app.ui.panes.colorpicker
 	import flash.display.Sprite;
 	import flash.utils.Dictionary;
 	import app.ui.buttons.ColorButton;
-	import com.fewfre.display.ButtonBase;
 	import com.fewfre.events.FewfEvent;
 	
 	public class ColorHistoryOverlay extends Sprite
@@ -60,7 +59,7 @@ package app.ui.panes.colorpicker
 				for(var i = 0; i < length; i++) {
 					var color = colors[i];
 					var btn = new ColorButton({ color:color, x:tX+((i%columns) * (btnSize+spacing)), y:tY+(Math.floor(i/columns)*(btnSize+spacing)), size:btnSize });
-					btn.addEventListener(ButtonBase.CLICK, _onHistoryColorClicked);
+					btn.onButtonClick(_onHistoryColorClicked);
 					this.addChild(btn);
 				}
 			}
