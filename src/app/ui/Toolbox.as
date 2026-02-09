@@ -75,12 +75,12 @@ package app.ui
 				tButtonsOnLeft++;
 			}
 			
-			if(Fewf.isAirRuntime) {
+			// if(Fewf.isAirRuntime) {
 				_clipboardButton = new GameButton(tButtonSize).setImage(new $CopyIcon(), 0.415).setOrigin(0.5).appendTo(tTray)
 					.move(xx+tButtonXInc*tButtonsOnLeft, yy)
 					.onButtonClick(dispatchEventHandler(CLIPBOARD_CLICKED)) as GameButton;
 				tButtonsOnLeft++;
-			}
+			// }
 			
 			// ### Right Side Buttons ###
 			xx = tTrayWidth*0.5-(tButtonSize*0.5 + tButtonSizeSpace);
@@ -125,7 +125,8 @@ package app.ui
 		
 		public function updateClipboardButton(normal:Boolean, elseYes:Boolean=true) : void {
 			if(!_clipboardButton) return;
-			_clipboardButton.setImage(normal ? new $CopyIcon() : elseYes ? new $Yes() : new $No());
+			if(normal) _clipboardButton.setImage(new $CopyIcon(), 0.415);
+			else _clipboardButton.setImage(elseYes ? new $Yes() : new $No(), 0.63);
 		}
 		
 		///////////////////////
