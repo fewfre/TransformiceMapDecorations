@@ -1,57 +1,52 @@
 package app.world.elements
 {
-	import com.piterwilson.utils.*;
-	import app.data.*;
-	import app.world.data.*;
-	import flash.display.*;
-	import flash.events.*;
-	import flash.geom.*;
-	import flash.net.*;
-	import flash.display.MovieClip;
 
-	public class CustomItem extends Sprite
+	import app.data.*;
+	import app.world.data.ItemData;
+	import com.fewfre.utils.Fewf;
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.events.MouseEvent;
+	import flash.geom.*;
+
+	public class CustomItem
 	{
 		// Storage
-		public var outfit:MovieClip;
-		public var animatePose:Boolean;
-
-		private var _itemData:ItemData;
+		private var _root       : Sprite;
+		private var _itemData   : ItemData;
+		private var _outfit     : MovieClip;
+		
+		private var _dragging   : Boolean = false;
+		private var _dragBounds : Rectangle;
 
 		// Properties
-		public function set scale(pVal:Number) : void { outfit.scaleX = outfit.scaleY = pVal; }
+		public function get root() : Sprite { return _root; }
+		public function get outfit() : MovieClip { return _outfit; }
+		public function get scale() : Number { return _outfit.scaleX; }
+		public function set scale(pVal:Number) : void { _outfit.scaleX = _outfit.scaleY = pVal; }
 
 		// Constructor
-		// pData = { x:Number, y:Number, item:ItemData, ?params:URLVariables }
-		public function CustomItem(pData:Object) {
-			super();
-			animatePose = false;
-
-			this.x = pData.x;
-			this.y = pData.y;
-
-			this.buttonMode = true;
-			this.addEventListener(MouseEvent.MOUSE_DOWN, function () { startDrag(); });
-			this.addEventListener(MouseEvent.MOUSE_UP, function () { stopDrag(); });
-
-			/****************************
-			* Store Data
-			*****************************/
-			_itemData = pData.item;
+		public function CustomItem(pItemData:ItemData, paramsString:String=null) {
+			_root = new Sprite();
+			_itemData = pItemData;
 			
-			/*if(pData.params) _parseParams(pData.params);*/
+			/*if(paramsString) _parseParams(paramsString);*/
 
 			updateItem();
+			
+			// Make interactable
+			_initDragging();
 		}
-		public function move(pX:Number, pY:Number) : CustomItem { this.x = pX; this.y = pY; return this; }
-		public function appendTo(pParent:Sprite): CustomItem { pParent.addChild(this); return this; }
-		public function on(type:String, listener:Function, useCapture:Boolean = false): CustomItem { this.addEventListener(type, listener, useCapture); return this; }
-		public function off(type:String, listener:Function, useCapture:Boolean = false): CustomItem { this.removeEventListener(type, listener, useCapture); return this; }
+		public function move(pX:Number, pY:Number) : CustomItem { _root.x = pX; _root.y = pY; return this; }
+		public function appendTo(pParent:Sprite): CustomItem { pParent.addChild(_root); return this; }
+		public function on(type:String, listener:Function, useCapture:Boolean = false): CustomItem { _root.addEventListener(type, listener, useCapture); return this; }
+		public function off(type:String, listener:Function, useCapture:Boolean = false): CustomItem { _root.removeEventListener(type, listener, useCapture); return this; }
 
 		public function updateItem() {
 			var tScale = ConstantsApp.DEFAULT_CHARACTER_SCALE;
-			if(outfit != null) { tScale = outfit.scaleX; removeChild(outfit); }
-			outfit = addChild(new (_itemData.itemClass)()) as MovieClip;
-			outfit.scaleX = outfit.scaleY = tScale;
+			if(_outfit != null) { tScale = _outfit.scaleX; _root.removeChild(_outfit); }
+			_outfit = _root.addChild(new (_itemData.itemClass)()) as MovieClip;
+			_outfit.scaleX = _outfit.scaleY = tScale;
 			
 			/*var tChild:DisplayObject = null;
 			for(var i:int = 0; i < outfit.numChildren; i++) {
@@ -64,21 +59,21 @@ package app.world.elements
 			tChild = null;*/
 			
 			if(_itemData.colors != null) {
-				GameAssets.colorItemUsingColorList(outfit, _itemData.colors);
+				GameAssets.colorItemUsingColorList(_outfit, _itemData.colors);
 			}
-			else { GameAssets.colorDefault(outfit); }
+			else { GameAssets.colorDefault(_outfit); }
 			
 			stopChildren();
 			
 			// if(animatePose) outfit.play(); else outfit.stopAtLastFrame();
 		}
 
-		private function _parseParams(pParams:URLVariables) : void {
+		private function _parseParams(pParams:String) : void {
 			/*trace(pParams.toString());
 
 			_setParamToType(pParams, ITEM.SKIN, "s", false);*/
 		}
-		private function _setParamToType(pParams:URLVariables, pType:String, pParam:String, pAllowNull:Boolean=true) {
+		private function _setParamToType(pParams:String, pType:String, pParam:String, pAllowNull:Boolean=true) {
 			/*var tData:ItemData = null;
 			if(pParams[pParam] != null) {
 				if(pParams[pParam] == '') {
@@ -90,7 +85,7 @@ package app.world.elements
 			_itemDataMap[pType] = pAllowNull ? tData : ( tData == null ? _itemDataMap[pType] : tData );*/
 		}
 
-		public function getParams() : URLVariables {
+		public function getParams() : String {
 			/*var tParms = new URLVariables();
 
 			var tData:ItemData;
@@ -120,22 +115,37 @@ package app.world.elements
 		
 		public function applyToAllChildren(pCallback:Function) : void {
 			var tChild:MovieClip = null;
-			for(var i:int = outfit.numChildren-1; i >= 0; i--) {
-				tChild = outfit.getChildAt(i) as MovieClip;
+			for(var i:int = _outfit.numChildren-1; i >= 0; i--) {
+				tChild = _outfit.getChildAt(i) as MovieClip;
 				if(tChild) pCallback(tChild);
 			}
 		}
 
-		/****************************
-		* Color
-		*****************************/
-		public function getColors(pType:CategoryType) : Vector.<uint> {
-			return getItemData(pType).colors;
+		/////////////////////////////
+		// Dragging
+		/////////////////////////////
+		private function _initDragging() : void {
+			_root.buttonMode = true;
+			_root.addEventListener(MouseEvent.MOUSE_DOWN, function (e:MouseEvent) {
+				_dragging = true;
+				var bounds:Rectangle = _dragBounds.clone();
+				bounds.x -= e.localX * _root.scaleX;
+				bounds.y -= e.localY * _root.scaleY;
+				_root.startDrag(false, bounds);
+			});
+			Fewf.stage.addEventListener(MouseEvent.MOUSE_UP, function () { if(_dragging) { _dragging = false; _root.stopDrag(); } });
+		}
+		public function setDragBounds(pX:Number, pY:Number, pWidth:Number, pHeight:Number): CustomItem {
+			_dragBounds = new Rectangle(pX, pY, pWidth, pHeight); return this;
+		}
+		public function clampCoordsToDragBounds() : void {
+			_root.x = Math.max(_dragBounds.x, Math.min(_dragBounds.right, _root.x));
+			_root.y = Math.max(_dragBounds.y, Math.min(_dragBounds.bottom, _root.y));
 		}
 
-		/****************************
-		* Update Data
-		*****************************/
+		/////////////////////////////
+		// Update Data
+		/////////////////////////////
 		public function getItemData(pType:CategoryType) : ItemData {
 			return _itemData;
 		}

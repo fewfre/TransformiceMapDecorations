@@ -1,4 +1,4 @@
-package app.ui
+package app.ui.panes.infobar
 {
 	import app.data.ConstantsApp;
 	import app.data.GameAssets;
@@ -18,7 +18,7 @@ package app.ui
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	
-	public class ShopInfoBar extends Sprite
+	public class Infobar extends Sprite
 	{
 		// Constants
 		public static const BACK_CLICKED            : String = "back_clicked";
@@ -27,21 +27,21 @@ package app.ui
 		public static const EYE_DROPPER_CLICKED     : String = "eye_dropper_clicked";
 		
 		// Storage
-		public var Width                 : Number;
-		public var _itemData             : ItemData;
+		public var _width              : Number;
+		public var _itemData           : ItemData;
 		
-		private var _image               : DisplayObject;
-		private var _imageCont           : RoundRectangle;
-		private var _removeItemOverlay   : Sprite;
+		private var _image             : DisplayObject;
+		private var _imageCont         : RoundRectangle;
+		private var _removeItemOverlay : Sprite;
 		
-		private var _backButton          : ScaleButton;
-		private var _colorWheel          : ScaleButton;
-		private var _leftButtonsTray     : Sprite;
-		private var _idText              : TextTranslated;
-		private var _eyeDropperButton    : GameButton;
+		private var _backButton        : ScaleButton;
+		private var _colorWheel        : ScaleButton;
+		private var _leftButtonsTray   : Sprite;
+		private var _idText            : TextTranslated;
+		private var _eyeDropperButton  : GameButton;
 		
-		private var _rightSideTray       : Sprite;
-		private var _downloadButton      : GameButton;
+		private var _rightSideTray     : Sprite;
+		private var _downloadButton    : GameButton;
 		
 		private var _gridManagementWidget : GridManagementWidget;
 		
@@ -56,10 +56,10 @@ package app.ui
 		// Constructor
 		// pData = { ?showBackButton:bool=false, ?hideItemPreview:bool=false, ?showEyeDropper:bool=false,
 		//           ?showDownload:bool=false, ?gridManagement:(bool|{})=false }
-		public function ShopInfoBar(pData:Object=null) {
+		public function Infobar(pData:Object=null) {
 			super();
-			pData = pData==null ? {} : pData;
-			this.Width = ConstantsApp.PANE_WIDTH;
+			pData = pData || {};
+			_width = ConstantsApp.PANE_WIDTH;
 			
 			/********************
 			* Active Item
@@ -131,7 +131,7 @@ package app.ui
 			*********************/
 			if(pData.gridManagement) {
 				var widgetProps:Object = pData.gridManagement is Boolean ? {} : pData.gridManagement; // If a boolean ("true") use defaults
-				_gridManagementWidget = new GridManagementWidget(widgetProps).move(this.Width*0.5-20+(144/2), BTN_Y).appendTo(this);
+				_gridManagementWidget = new GridManagementWidget(widgetProps).move(_width*0.5-20+(144/2), BTN_Y).appendTo(this);
 				_gridManagementWidget.on(GridManagementWidget.RANDOMIZE_CLICKED, function(e):void{ dispatchEvent(e); })
 				_gridManagementWidget.on(GridManagementWidget.RANDOMIZE_LOCK_CLICKED, function(e):void{ dispatchEvent(e); })
 				_gridManagementWidget.on(GridManagementWidget.REVERSE_CLICKED, function(e):void{ dispatchEvent(e); })
@@ -143,7 +143,7 @@ package app.ui
 			/********************
 			* Right Side Buttons
 			*********************/
-			_rightSideTray = DisplayWrapper.wrap(new Sprite(), this).move(this.Width, 0).asSprite;
+			_rightSideTray = DisplayWrapper.wrap(new Sprite(), this).move(_width, 0).asSprite;
 			if(pData.showDownload) {
 				(_downloadButton = new GameButton(BTN_SIZE)).setImage(new $SimpleDownload(), 0.45).move(-BTN_SIZE, BTN_Y).appendTo(_rightSideTray);
 				_downloadButton.onButtonClick(_saveSprite);
@@ -151,7 +151,7 @@ package app.ui
 			}
 			
 			// Line separating infobar and contents below it
-			GameAssets.createHorizontalRule(5, 53, this.Width-10).appendTo(this);
+			GameAssets.createHorizontalRule(5, 53, _width-10).appendTo(this);
 			
 			if(pData.hideItemPreview) {
 				hideImageCont();
@@ -159,10 +159,10 @@ package app.ui
 			
 			_repositionGridManagementWidget();
 		}
-		public function move(pX:Number, pY:Number) : ShopInfoBar { x = pX; y = pY; return this; }
-		public function appendTo(pParent:Sprite): ShopInfoBar { pParent.addChild(this); return this; }
-		public function on(type:String, listener:Function): ShopInfoBar { this.addEventListener(type, listener); return this; }
-		public function off(type:String, listener:Function): ShopInfoBar { this.removeEventListener(type, listener); return this; }
+		public function move(pX:Number, pY:Number) : Infobar { x = pX; y = pY; return this; }
+		public function appendTo(pParent:Sprite): Infobar { pParent.addChild(this); return this; }
+		public function on(type:String, listener:Function): Infobar { this.addEventListener(type, listener); return this; }
+		public function off(type:String, listener:Function): Infobar { this.removeEventListener(type, listener); return this; }
 
 		public function changeImage(pImage:DisplayObject) : void {
 			if(_image != null) { _imageCont.removeChild(_image); }

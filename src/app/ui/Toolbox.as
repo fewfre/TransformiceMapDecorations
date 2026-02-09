@@ -12,14 +12,19 @@ package app.ui
 	import com.fewfre.utils.FewfDisplayUtils;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.MouseEvent;
 	import flash.utils.ByteArray;
 	
 	public class Toolbox extends Sprite
 	{
 		// Constants
-		public static const SAVE_CLICKED      = "save_clicked";
-		public static const CLIPBOARD_CLICKED = "clipboard_clicked";
+		public static const SAVE_CLICKED          = "save_clicked";
+		public static const CLIPBOARD_CLICKED     = "clipboard_clicked";
+		
 		public static const SCALE_SLIDER_CHANGE   = "scale_slider_change";
+		public static const DEFAULT_SCALE_CLICKED = "default_scale_clicked";
+		
+		public static const RANDOM_CLICKED        = "random_clicked";
 		
 		// Storage
 		private var _character		: CustomItem;
@@ -29,6 +34,7 @@ package app.ui
 		private var _imgurButton        : GameButton;
 		
 		private var _scaleSlider        : FancySlider;
+		private var _defaultScaleButton : GameButton;
 		
 		// Properties
 		public function get scaleSlider() : FancySlider { return _scaleSlider; }
@@ -79,11 +85,11 @@ package app.ui
 			// ### Right Side Buttons ###
 			xx = tTrayWidth*0.5-(tButtonSize*0.5 + tButtonSizeSpace);
 
-			// // Dice icon based on https://www.iconexperience.com/i_collection/icons/?icon=dice
-			// new GameButton(tButtonSize).setImage(new $Dice()).setOrigin(0.5).appendTo(tTray)
-			// 	.move(xx-tButtonXInc*tButtonOnRight, yy)
-			// 	.onButtonClick(dispatchEventHandler(RANDOM_CLICKED));
-			// tButtonOnRight++;
+			// Dice icon based on https://www.iconexperience.com/i_collection/icons/?icon=dice
+			new GameButton(tButtonSize).setImage(new $Dice()).setOrigin(0.5).appendTo(tTray)
+				.move(xx-tButtonXInc*tButtonOnRight, yy)
+				.onButtonClick(dispatchEventHandler(RANDOM_CLICKED));
+			tButtonOnRight++;
 			
 			/********************
 			* Scale slider
@@ -95,6 +101,14 @@ package app.ui
 				.setSliderParams(1, 8, ConstantsApp.DEFAULT_CHARACTER_SCALE)
 				.appendTo(tTray)
 				.on(FancySlider.CHANGE, dispatchEventHandler(SCALE_SLIDER_CHANGE));
+			
+			(_defaultScaleButton = new GameButton(100, 14)).setText('btn_color_defaults').setOrigin(0.5).move(xx+tSliderWidth/2, yy-16.5).appendTo(tTray).setAlpha(0)
+				.onButtonClick(dispatchEventHandler(DEFAULT_SCALE_CLICKED));
+				
+			scaleSlider.on(MouseEvent.MOUSE_OVER, function():void{ _defaultScaleButton.alpha = 0.8; });
+			_defaultScaleButton.on(MouseEvent.MOUSE_OVER, function():void{ _defaultScaleButton.alpha = 0.8; });
+			scaleSlider.on(MouseEvent.MOUSE_OUT, function():void{ _defaultScaleButton.alpha = 0; });
+			_defaultScaleButton.on(MouseEvent.MOUSE_OUT, function():void{ _defaultScaleButton.alpha = 0; });
 		}
 		public function move(pX:Number, pY:Number) : Toolbox { x = pX; y = pY; return this; }
 		public function appendTo(pParent:Sprite): Toolbox { pParent.addChild(this); return this; }
@@ -121,7 +135,7 @@ package app.ui
 		
 		private function _onImgurButtonClicked(e:Event) : void {
 			_imgurButton.disable();
-			_uploadToImgur(_character, function(pResp, err:String=null):void{
+			_uploadToImgur(_character.root, function(pResp, err:String=null):void{
 				_imgurButton.enable();
 			});
 		}

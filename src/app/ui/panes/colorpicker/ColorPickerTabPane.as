@@ -2,26 +2,24 @@ package app.ui.panes.colorpicker
 {
 	import app.data.ConstantsApp;
 	import app.ui.buttons.GameButton;
-	import app.ui.panes.TabPane;
-	import app.ui.ShopInfoBar;
+	import app.ui.panes.base.GridSidePane;
+	import app.ui.panes.infobar.Infobar;
 	import com.fewfre.events.FewfEvent;
 	import com.piterwilson.utils.ColorPicker;
-	import ext.ParentApp;
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
-	import flash.events.DataEvent;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
-	import flash.utils.Dictionary;
-	
-	public class ColorPickerTabPane extends TabPane
+	import flash.events.DataEvent;
+	import com.fewfre.display.DisplayWrapper;
+	import flash.display.Graphics;
+
+	public class ColorPickerTabPane extends GridSidePane
 	{
 		// Constants
 		public static const EVENT_SWATCH_CHANGED	: String = "event_swatch_changed";
-		public static const EVENT_DEFAULT_CLICKED	: String = "event_default_clicked";
 		public static const EVENT_COLOR_PICKED		: String = "event_color_picked";
 		public static const EVENT_PREVIEW_COLOR		: String = "event_preview_color";
-		public static const EVENT_EXIT				: String = "event_exit";
 		public static const EVENT_ITEM_ICON_CLICKED : String = "event_item_icon_clicked";
 		
 		// Storage
@@ -29,49 +27,55 @@ package app.ui.panes.colorpicker
 		private var _selectedSwatch            : int=0;
 		private var _psColorPick               : ColorPicker;
 		
+		private var _defaultColors             : Vector.<uint>;
 		private var _lastColorChangeValue      : int;
 		private var _dontTrackNextRecentChange : Boolean;
 		
 		private var _recentColorsDisplay       : RecentColorsListDisplay;
 		private var _randomizeButton           : GameButton;
+		private var _allLockToggleIcon         : DisplayWrapper;
 		
 		private var _colorHistory              : ColorHistoryOverlay;
+		
+		private static const _lockHistory       : LockHistoryMap = new LockHistoryMap();
 		
 		// Properties
 		public function get selectedSwatch():int { return _selectedSwatch; }
 		
 		// Constructor
-		public function ColorPickerTabPane(pData:Object)
-		{
-			super();
+		// pData = { hide_default:bool, hideItemPreview:bool }
+		public function ColorPickerTabPane(pData:Object=null) {
+			pData = pData || {};
+			super(1);
+			_colorSwatches = new Vector.<ColorSwatch>();
 			
-			this.addInfoBar( new ShopInfoBar({ showBackButton:true, showDownload:true }) );
-			this.infoBar
-				.on(ShopInfoBar.BACK_CLICKED, _onColorPickerBackClicked)
-				.on(ShopInfoBar.ITEM_PREVIEW_CLICKED, function(e){ dispatchEvent(new Event(EVENT_ITEM_ICON_CLICKED)); });
+			this.addInfobar( new Infobar({ showBackButton:true, showDownload:true, hideItemPreview:pData.hideItemPreview }) )
+				.on(Infobar.BACK_CLICKED, _onColorPickerBackClicked)
+				.on(Infobar.ITEM_PREVIEW_CLICKED, function(e){ dispatchEvent(new Event(EVENT_ITEM_ICON_CLICKED)); });
 			
-			var tClickOffDetector = addChild(new Sprite()) as Sprite;
-			tClickOffDetector.graphics.beginFill( 0xFFFFFF );
-			tClickOffDetector.graphics.drawRect( 0, 0, 115, 325 );
-			tClickOffDetector.alpha = 0;
-			tClickOffDetector.x = 0;
-			tClickOffDetector.y = 60;
-			tClickOffDetector.addEventListener(MouseEvent.CLICK, function(e:Event){
-				_addRecentColor();
-			});
+			var tClickOffDetector:Sprite = addItem(new Sprite()) as Sprite;
+			tClickOffDetector.graphics.beginFill( 0xFFFFFF, 0 );
+			tClickOffDetector.graphics.drawRect( 0, 0, 114, 325 );
+			tClickOffDetector.addEventListener(MouseEvent.CLICK, function(e:Event){ _addRecentColor(); });
 			
-			_psColorPick = this.addItem(new ColorPicker()) as ColorPicker;
-			_psColorPick.x = 105;
-			_psColorPick.y = 5;
-			_psColorPick.addEventListener(ColorPicker.COLOR_PICKED, _onColorPickChanged);
+			_psColorPick = this.addItem(new ColorPicker().move(105, 5).on(ColorPicker.COLOR_PICKED, _onColorPickChanged)) as ColorPicker;
 			
 			var hueCenterY:Number = _psColorPick.y + 10 + 20/2; // picker.y + hueBar.y + hueBar.height/2
 			
-			_colorSwatches = new Vector.<ColorSwatch>();
-			
 			if(!pData.hide_default) {
-				this.addItem( new GameButton(100, 22).setOrigin(0, 0.5).setText("btn_color_defaults").move(6, hueCenterY)
-					.onButtonClick(_onDefaultButtonClicked) );
+				// Lock Button
+				_allLockToggleIcon = new DisplayWrapper(new $Lock());
+				this.addItem( new GameButton(15, 22).setOrigin(0, 0.5).setImage(_allLockToggleIcon.asSprite, 0.5).move(0, hueCenterY)
+					.onButtonClick(function(){
+						if(_getLockToggleButtonState() == "clear") _clearAllLocks();
+						else _lockAllLocks();
+						_updateLockToggleButtonState();
+					}) );
+				_updateLockToggleButtonState();
+				
+				// Defaults Button
+				this.addItem( new GameButton(88, 22).setOrigin(0, 0.5).setText("btn_color_defaults").move(15+5, hueCenterY)
+					.onButtonClick(function(){ _defaultAllColors(); }) );
 			}
 			
 			_randomizeButton = new GameButton(24).setOrigin(0.5).setImage(new $Dice(), 0.8)
@@ -83,12 +87,9 @@ package app.ui.panes.colorpicker
 				.on(RecentColorsListDisplay.EVENT_COLOR_PICKED, _onRecentColorBtnClicked);
 			
 			var historySize = 270;
-			_colorHistory = new ColorHistoryOverlay(historySize);
-			_colorHistory.x = _psColorPick.x + 10 + historySize*0.5;
-			_colorHistory.y = _psColorPick.y + 40 + historySize*0.5;
-			_colorHistory.addEventListener(ColorHistoryOverlay.EVENT_COLOR_PICKED, _onHistoryColorClicked);
-			
-			this.UpdatePane(false);
+			_colorHistory = new ColorHistoryOverlay(historySize)
+				.move(_psColorPick.x + 10 + historySize*0.5, _psColorPick.y + 40 + historySize*0.5)
+				.on(ColorHistoryOverlay.EVENT_COLOR_PICKED, _onHistoryColorClicked);
 		}
 		
 		public override function open() : void {
@@ -101,13 +102,51 @@ package app.ui.panes.colorpicker
 		public override function close() : void {
 			super.close();
 			_addRecentColor(); // Add here since we're exiting, and thus change is finalized
+			_recentColorsDisplay.toggleOffDeleteMode();
 			dispatchEvent(new FewfEvent(EVENT_PREVIEW_COLOR, null));
 		}
 		
 		/****************************
 		* Public
 		*****************************/
-		public function setupSwatches(pSwatches:Vector.<uint>) : void {
+		public function init(pId:String, pColors:Vector.<uint>, pDefaults:Vector.<uint>) : void {
+			_lockHistory.init(pId, pColors.length);
+			
+			_setupSwatches(pColors);
+			_defaultColors = pDefaults ? pDefaults.concat() : null;
+			_updateLockToggleButtonState(); // Needed since lock history changes between items / trash all button deletes all lock history
+		}
+		
+		public function renderRecents() : void {
+			_recentColorsDisplay.render();
+		}
+		
+		public function getAllColors() : Vector.<uint> {
+			var colors:Vector.<uint> = new Vector.<uint>();
+			for(var i:int = 0; i < _colorSwatches.length; i++){
+				colors.push( _colorSwatches[i].color );
+			}
+			return colors;
+		}
+		
+		public function nextSwatch(pForward:Boolean=true) : void {
+			var newSwatchI:int = _selectedSwatch + (pForward ? 1 : -1);
+			// Force index to loop in both directions
+			newSwatchI = (newSwatchI + _colorSwatches.length) % _colorSwatches.length;
+			_selectSwatch(newSwatchI);
+		}
+		
+		/****************************
+		* Private
+		*****************************/
+		private function addItem(pItem:DisplayObject) : DisplayObject {
+			return _scrollbox.add(pItem);
+		}
+		private function removeItem(pItem:DisplayObject) : DisplayObject {
+			return _scrollbox.remove(pItem);
+		}
+		
+		public function _setupSwatches(pSwatches:Vector.<uint>) : void {
 			for each(var btn:ColorSwatch in _colorSwatches) {
 				this.removeItem(btn);
 			}
@@ -115,7 +154,7 @@ package app.ui.panes.colorpicker
 			
 			var swatch:ColorSwatch;
 			for(var i:int = 0; i < pSwatches.length; i++) {
-				swatch = _createColorSwatch(i, 5, 45 + (i * 27));
+				swatch = _createColorSwatch(i, 5, 45 + (i * 27), _lockHistory.getLockHistory(i));
 				swatch.color = pSwatches[i];
 				_colorSwatches.push(swatch);
 				if(_getHistoryColors(i).length == 0) {
@@ -133,22 +172,7 @@ package app.ui.panes.colorpicker
 			renderRecents();
 		}
 		
-		public function renderRecents() : void {
-			_recentColorsDisplay.render();
-		}
-		
-		public function getAllColors() : Vector.<uint> {
-			var colors:Vector.<uint> = new Vector.<uint>();
-			for(var i:int = 0; i < _colorSwatches.length; i++){
-				colors.push( _colorSwatches[i].color );
-			}
-			return colors;
-		}
-		
-		/****************************
-		* Private
-		*****************************/
-		private function _createColorSwatch(pNum:int, pX:int, pY:int) : ColorSwatch {
+		private function _createColorSwatch(pNum:int, pX:int, pY:int, pLocked:Boolean=false) : ColorSwatch {
 			var swatch:ColorSwatch = new ColorSwatch().move(pX, pY)
 				.on(ColorSwatch.USER_MODIFIED_TEXT, function(){ _selectSwatch(pNum); changeColor(swatch.color, true); })
 				.on(ColorSwatch.ENTER_PRESSED, function(){ _selectSwatch(pNum); _addRecentColor(); })
@@ -159,15 +183,14 @@ package app.ui.panes.colorpicker
 					_selectSwatch(pNum);
 				})
 				.on(ColorSwatch.SHOW_PREVIEW, function(){
-					if(!!infoBar.itemData) {
-						dispatchEvent(new FewfEvent(EVENT_PREVIEW_COLOR, { type:infoBar.itemData.type, id:infoBar.itemData.id, colorI:pNum }));
+					if(!!infobar.itemData) {
+						dispatchEvent(new FewfEvent(EVENT_PREVIEW_COLOR, { type:infobar.itemData.type, id:infobar.itemData.id, colorI:pNum }));
 					}
 				})
 				.on(ColorSwatch.HIDE_PREVIEW, function(){ dispatchEvent(new FewfEvent(EVENT_PREVIEW_COLOR, null)); })
 				.on(ColorSwatch.HISTORY_CLICKED, function(e){ _showHistory(pNum); })
-				.on(ColorSwatch.LOCK_TOGGLED, function(){
-					swatch.locked ? swatch.unlock() : swatch.lock();
-				});
+				.on(ColorSwatch.LOCK_TOGGLED, function(e:FewfEvent){ _updateLockHistoryFromCurrentState(); });
+			if(pLocked) { swatch.lock(); }
 			return swatch;
 		}
 		
@@ -179,6 +202,7 @@ package app.ui.panes.colorpicker
 			_colorSwatches[pNum].select();
 			
 			_psColorPick.setCursor(_colorSwatches[pNum].color);
+			_recentColorsDisplay.toggleOffDeleteMode();
 		}
 		
 		private function changeColor(color:uint, pSkipColorSwatch:Boolean=false, pSkipSetSursor:Boolean=false) {
@@ -186,7 +210,7 @@ package app.ui.panes.colorpicker
 			if(!pSkipColorSwatch) _colorSwatches[_selectedSwatch].color = color;
 			if(!pSkipSetSursor) _psColorPick.setCursor(color);
 			_trackRecentColor(color);
-			dispatchEvent(new FewfEvent(EVENT_COLOR_PICKED, { color:color }));
+			_dispatchColorUpdate(color, _selectedSwatch, false);
 		}
 		
 		private function _trackRecentColor(color:uint) {
@@ -219,20 +243,34 @@ package app.ui.panes.colorpicker
 			_untrackRecentColor();
 		}
 		
-		private function _randomizeAllColors() {
+		private function _updateColors(pColors:Vector.<uint>, pRespectLocks:Boolean=true) : void {
 			for(var i = 0; i < _colorSwatches.length; i++) {
 				_colorSwatches[i].unselect();
-				if(_colorSwatches[i].locked == false) {
-					var randomColor = uint(Math.random() * 0xFFFFFF);
-					_colorSwatches[i].color = randomColor;
+				if(!pRespectLocks || _colorSwatches[i].locked == false) {
+					_colorSwatches[i].color = pColors[i];
 					_colorSwatches[i].padCodeIfNeeded();
-					_addHistory(randomColor, i);
+					_addHistory(pColors[i], i);
 				}
 			}
 			_colorSwatches[_selectedSwatch].select();
 			_psColorPick.setCursor(_colorSwatches[_selectedSwatch].color);
+		}
+		
+		private function _randomizeAllColors() {
+			var newColors:Vector.<uint> = new Vector.<uint>(_colorSwatches.length).map(function(){ return uint(Math.random() * 0xFFFFFF) });
+			_updateColors(newColors, true);
+			
 			_untrackRecentColor();
-			dispatchEvent(new FewfEvent(EVENT_COLOR_PICKED, { randomizedAll:true, color:_colorSwatches[_selectedSwatch].color }));
+			_recentColorsDisplay.toggleOffDeleteMode();
+			_dispatchColorUpdate(_colorSwatches[_selectedSwatch].color, _selectedSwatch, true);
+		}
+		
+		private function _defaultAllColors() {
+			_updateColors(_defaultColors.concat(), true);
+			
+			_untrackRecentColor();
+			_recentColorsDisplay.toggleOffDeleteMode();
+			_dispatchColorUpdate(_colorSwatches[_selectedSwatch].color, _selectedSwatch, true);
 		}
 		
 		/****************************
@@ -240,7 +278,7 @@ package app.ui.panes.colorpicker
 		*****************************/
 		// Return a key unique to both this item and this swatch
 		private function _getHistoryDictKey(swatchI:int) {
-			return !infoBar.itemData ? ["misc", swatchI].join('_') : [infoBar.itemData.type, infoBar.itemData.id, swatchI].join('_');
+			return !infobar.itemData ? ["misc", swatchI].join('_') : [infobar.itemData.type, infobar.itemData.id, swatchI].join('_');
 		}
 		private function _addHistory(color:int, swatchI:int) {
 			var itemID = _getHistoryDictKey(swatchI);
@@ -261,11 +299,64 @@ package app.ui.panes.colorpicker
 			addItem(_colorHistory);
 		}
 		private function _hideHistory() {
-			if(containsItem(_colorHistory)) removeItem(_colorHistory);
+			if(_scrollbox.contains(_colorHistory)) removeItem(_colorHistory);
 		}
 		private function _showHistoryButtonIfValid(swatchI:int) {
 			if(_getHistoryColors(swatchI).length > 1) {
 				_colorSwatches[swatchI].showHistoryButton();
+			}
+		}
+		
+		/****************************
+		* Lock History
+		*****************************/
+		private function _updateLockHistoryFromCurrentState() : void {
+			_lockHistory.clearLockHistory();
+			for(var i:int = 0; i < _colorSwatches.length; i++) {
+				_lockHistory.setLockHistory(i, _colorSwatches[i].locked);
+			}
+			_updateLockToggleButtonState();
+		}
+		private function _updateLocksToMatchHistory() : void {
+			for(var i:int = 0; i < _colorSwatches.length; i++) {
+				var locked:Boolean = _lockHistory.getLockHistory(i);
+				if(locked && !_colorSwatches[i].locked) _colorSwatches[i].lock();
+				else if(!locked && _colorSwatches[i].locked) _colorSwatches[i].unlock();
+			}
+			_updateLockToggleButtonState();
+		}
+		private function _lockAllLocks() : void {
+			for(var i:int = 0; i < _colorSwatches.length; i++) {
+				_lockHistory.setLockHistory(i, true);
+			}
+			_updateLocksToMatchHistory();
+		}
+		private function _clearAllLocks() : void {
+			_lockHistory.clearLockHistory();
+			_updateLocksToMatchHistory();
+		}
+		
+		private function _getLockToggleButtonState() : String {
+			var state:String = "lock";
+			for(var i:int = 0; i < _colorSwatches.length; i++) {
+				if(_colorSwatches[i].locked) {
+					state = "clear";
+					break;
+				}
+			}
+			return state;
+		}
+		
+		private function _updateLockToggleButtonState() : void {
+			if(!_allLockToggleIcon) { return; }
+			if(_getLockToggleButtonState() == "clear") {
+				_allLockToggleIcon.draw(function(g:Graphics):void{
+					g.lineStyle(4, 0XFF0000);
+					g.moveTo(-12, 6);
+					g.lineTo(12, -6);
+				})
+			} else {
+				_allLockToggleIcon.draw(function(g:Graphics):void{ g.clear(); })
 			}
 		}
 		
@@ -275,6 +366,7 @@ package app.ui.panes.colorpicker
 		private function _onColorPickChanged(pEvent:DataEvent) : void {
 			// Skip cursor set since otherwise the top color bar gets updated when just dragging cursor around
 			changeColor(uint(pEvent.data), false, true);
+			_recentColorsDisplay.toggleOffDeleteMode();
 		}
 		
 		private function _onRecentColorBtnClicked(pEvent:FewfEvent) : void {
@@ -289,14 +381,17 @@ package app.ui.panes.colorpicker
 			_addRecentColor();
 		}
 		
-		private function _onDefaultButtonClicked(pEvent:Event) : void {
-			_untrackRecentColor();
-			_dontTrackNextRecentChange = true;
-			dispatchEvent(new Event(EVENT_DEFAULT_CLICKED));
+		private function _onColorPickerBackClicked(pEvent:Event) : void {
+			dispatchEvent(new Event(Event.CLOSE));
 		}
 		
-		private function _onColorPickerBackClicked(pEvent:Event) : void {
-			dispatchEvent(new Event(EVENT_EXIT));
+		private function _dispatchColorUpdate(pColor:uint, pColorIndex:int, pAllUpdated:Boolean=false) : void {
+			dispatchEvent(new FewfEvent(EVENT_COLOR_PICKED, {
+				color: pColor,
+				colorIndex: pColorIndex,
+				allUpdated: pAllUpdated,
+				allColors: getAllColors()
+			}));
 		}
 	}
 }

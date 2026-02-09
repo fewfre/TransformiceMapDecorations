@@ -13,6 +13,9 @@ package app.world.data
 
 		public var defaultColors: Vector.<uint>;
 		public var colors		: Vector.<uint>;
+		
+		// Properties
+		public function get isCustomizable() : Boolean { return defaultColors.length > 0; }
 
 		// pData = { itemClass:Class, ?classMap:Object<Class> }
 		public function ItemData(pType:CategoryType, pId:String, pData:Object) {
@@ -23,12 +26,25 @@ package app.world.data
 			classMap = pData.classMap;
 			_initDefaultColors();
 		}
+		public function copy() : ItemData { return new ItemData(type, id, { itemClass:itemClass, classMap:classMap }); }
+		
 		protected function _initDefaultColors() : void {
 			defaultColors = GameAssets.findDefaultColors(new itemClass());
 			setColorsToDefault();
 		}
 		public function setColorsToDefault() : void {
 			colors = defaultColors.concat();
+		}
+		public function hasModifiedColors() : Boolean {
+			return (colors ? colors.join() : "") != (defaultColors ? defaultColors.join() : "");
+		}
+		
+		public function matches(compare:ItemData) : Boolean {
+			return !!compare && type == compare.type && id == compare.id;
+		}
+		
+		public function uniqId() : String {
+			return this.type + '--' + this.id;
 		}
 
 		public function getPart(pID:String, pOptions:Object=null) : Class {

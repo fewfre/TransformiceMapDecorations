@@ -1,18 +1,17 @@
 package app.ui.panes
 {
 	import app.data.*;
-	import app.ui.*;
-	import app.ui.buttons.*;
+	import app.ui.panes.infobar.Infobar;
+	import com.fewfre.display.Grid;
 	import fl.containers.ScrollPane;
 	import flash.display.*;
-	import com.fewfre.display.Grid;
 
 	public class TabPane extends MovieClip
 	{
 		// Storage
 		protected var _flagOpen : Boolean;
 		protected var _flagDirty : Boolean;
-		public var infoBar : ShopInfoBar;
+		public var infoBar : Infobar;
 		public var buttons : Array;
 		public var grid : Grid;
 		public var selectedButtonIndex : int;
@@ -71,8 +70,8 @@ package app.ui.panes
 			return this.content.contains(pItem);
 		}
 
-		public function addInfoBar(pBar:ShopInfoBar) : void {
-			this.infoBar = this.addChild(pBar) as ShopInfoBar;
+		public function addInfoBar(pBar:Infobar) : void {
+			this.infoBar = this.addChild(pBar) as Infobar;
 		}
 
 		public function addGrid(pGrid:Grid) : Grid {
@@ -118,6 +117,7 @@ package app.ui.panes
 }
 
 import fl.containers.ScrollPane;
+
 import flash.events.MouseEvent;
 // https://stackoverflow.com/a/14332350/1411473
 class ScrollPaneWithDragFix extends ScrollPane
