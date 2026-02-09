@@ -5,6 +5,7 @@
 	- About screen has 2 settings available for hardcoded scale and hardcoded save size
 - Imgur button updated to use external server script instead of an in-app file
 - [Code] Some small `I18n` and `fewfre` lib tweaks
+- [Code] `fewfre` lib and `common` buttons updated to match updated versions from tfm dressroom
 
 ## V1.4 - 9 April 2023
 - Porting over TFM dressroom code changes from last few years

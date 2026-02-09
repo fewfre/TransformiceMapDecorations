@@ -1,9 +1,5 @@
 package app.ui.panes
 {
-	import app.data.*;
-	import app.ui.*;
-	import app.ui.buttons.*;
-	import app.ui.common.*;
 	import com.fewfre.utils.*;
 	import flash.display.*;
 	import flash.events.*;
@@ -14,6 +10,11 @@ package app.ui.panes
 	import flash.net.FileReference;
 	import flash.net.FileFilter;
 	import flash.net.URLRequest;
+	import app.data.ConstantsApp;
+	import app.ui.buttons.ScaleButton;
+	import app.ui.ShopInfoBar;
+	import app.ui.common.FancySlider;
+	import com.fewfre.display.RoundRectangle;
 	
 	public class ColorFinderPane extends TabPane
 	{
@@ -22,6 +23,7 @@ package app.ui.panes
 		public static const EVENT_DEFAULT_CLICKED	: String = "event_default_clicked";
 		public static const EVENT_COLOR_PICKED		: String = "event_color_picked";
 		public static const EVENT_EXIT				: String = "event_exit";
+		public static const EVENT_ITEM_ICON_CLICKED : String = "event_item_icon_clicked";
 		
 		// Storage
 		private var _tray : MovieClip;
@@ -30,9 +32,9 @@ package app.ui.panes
 		private var _itemDragDrop : MovieClip;
 		private var _item : MovieClip;
 		private var _text : TextField;
-		private var _textColorBox : RoundedRectangle;
+		private var _textColorBox : RoundRectangle;
 		private var _hoverText : TextField;
-		private var _hoverColorBox : RoundedRectangle;
+		private var _hoverColorBox : RoundRectangle;
 		// private var _recentColorsDisplay : RecentColorsListDisplay;
 		private var _scaleSlider : FancySlider;
 		
@@ -50,7 +52,9 @@ package app.ui.panes
 		{
 			super();
 			this.addInfoBar( new ShopInfoBar({ showBackButton:true }) );
-			this.infoBar.colorWheel.addEventListener(MouseEvent.MOUSE_UP, _onBackClicked);
+			this.infoBar
+				.on(ShopInfoBar.BACK_CLICKED, _onBackClicked)
+				.on(ShopInfoBar.ITEM_PREVIEW_CLICKED, function(e){ dispatchEvent(new Event(EVENT_ITEM_ICON_CLICKED)); });
 			this.UpdatePane(false);
 			
 			_tray = addChild(new MovieClip()) as MovieClip;
@@ -120,27 +124,23 @@ package app.ui.panes
 			*****************************/
 			var tTFWidth:Number = 65, tTFHeight:Number = 18, tTFPaddingX:Number = 5, tTFPaddingY:Number = 5;
 			// So much easier than doing it with those darn native text field options which have no padding.
-			var tTextBackground:RoundedRectangle = new RoundedRectangle({ x:15, y:170, width:tTFWidth+tTFPaddingX*2, height:tTFHeight+tTFPaddingY*2, origin:0.5 })
-				.appendTo(_tray).draw(0xFFFFFF, 7, 0x444444);
+			var tTextBackground:RoundRectangle = new RoundRectangle(tTFWidth+tTFPaddingX*2, tTFHeight+tTFPaddingY*2).toOrigin(0.5)
+				.move(15, 170).appendTo(_tray).toRadius(7).drawSolid(0xFFFFFF, 0x444444);
 			
 			_text = tTextBackground.addChild(new TextField()) as TextField;
 			_text.type = TextFieldType.DYNAMIC;
 			_text.multiline = false;
 			_text.width = tTFWidth;
 			_text.height = tTFHeight;
-			_text.x = tTFPaddingX - tTextBackground.Width*0.5;
-			_text.y = tTFPaddingY - tTextBackground.Height*0.5;
+			_text.x = tTFPaddingX - tTextBackground.width*0.5;
+			_text.y = tTFPaddingY - tTextBackground.height*0.5;
 			_text.addEventListener(MouseEvent.CLICK, function(pEvent:Event){ _text.setSelection(0, _text.text.length); });
 			
-			var tSize = tTextBackground.Height;
-			_textColorBox = _tray.addChild(new RoundedRectangle({
-				x:tTextBackground.x - (tTextBackground.Width*0.5) - (tSize*0.5) - 5,
-				y:tTextBackground.y, width: tSize, height: tSize, origin:0.5
-			})) as RoundedRectangle;
+			var tSize = tTextBackground.height;
+			_textColorBox = new RoundRectangle(tSize, tSize).toOrigin(0.5).toRadius(7).appendTo(_tray)
+				.move(tTextBackground.x - (tTextBackground.width*0.5) - (tSize*0.5) - 5, tTextBackground.y);
 			
-			_hoverColorBox = _tray.addChild(new RoundedRectangle({
-				/*x:ConstantsApp.PANE_WIDTH*0.5-5, y:-122,*/ width:35, height:35, originX:0, originY:1
-			})) as RoundedRectangle;
+			_hoverColorBox = new RoundRectangle(35, 35).toOrigin(0, 1).toRadius(7).appendTo(_tray);//.move(ConstantsApp.PANE_WIDTH*0.5-5, -122);
 			_hoverColorBox.visible = false;
 			/*var tHoverTextBackground = _hoverColorBox.addChild(new RoundedRectangle({ x:-_hoverColorBox.Width*0.5, y:_hoverColorBox.Height+20,
 				width:_hoverColorBox.Width+8, height:20, originX:0.5, originY:1 }));
@@ -167,10 +167,8 @@ package app.ui.panes
 			fileRef.addEventListener(Event.SELECT, function(){ fileRef.load(); });
 			fileRef.addEventListener(Event.COMPLETE, _onFileSelect);
 			
-			var selectImageBtn = new ScaleButton({ x:ConstantsApp.PANE_WIDTH*0.5 - 30, y: -_tray.y + 60 + 20, obj:new $Folder(), obj_scale:1 });
-			selectImageBtn.onButtonClick(function(){
-				fileRef.browse([new FileFilter("Images", "*.jpg;*.jpeg;*.gif;*.png")]);
-			});
+			var selectImageBtn = new ScaleButton(new $Folder(), 1).move(ConstantsApp.PANE_WIDTH*0.5 - 30, -_tray.y + 60 + 20);
+			selectImageBtn.onButtonClick(function(){ fileRef.browse([new FileFilter("Images", "*.jpg;*.jpeg;*.gif;*.png")]); });
 			_tray.addChild(selectImageBtn);
 		}
 		
@@ -231,21 +229,21 @@ package app.ui.panes
 		private function _setColorText(pColor:int) : void {
 			if(pColor != -1) {
 				_text.text = FewfUtils.lpad(pColor.toString(16).toUpperCase(), 6, "0");
-				_textColorBox.draw(pColor, 7, 0x444444);
+				_textColorBox.drawSolid(pColor, 0x444444);
 				// _recentColorsDisplay.addColor(pColor);
 			} else {
 				_text.text = "000000";
-				_textColorBox.draw(0x000000, 7, 0x444444);
+				_textColorBox.drawSolid(0x000000, 0x444444);
 			}
 		}
 		
 		private function _setHoverColor(pColor:int) : void {
 			if(pColor != -1) {
 				/*_hoverText.text = FewfUtils.lpad(pColor.toString(16).toUpperCase(), 6, "0");*/
-				_hoverColorBox.draw(pColor, 7, 0x444444);
+				_hoverColorBox.drawSolid(pColor, 0x444444);
 			} else {
 				/*_hoverText.text = "000000";*/
-				_hoverColorBox.draw(0x000000, 7, 0x444444);
+				_hoverColorBox.drawSolid(0x000000, 0x444444);
 			}
 		}
 		

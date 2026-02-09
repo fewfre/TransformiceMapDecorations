@@ -42,6 +42,10 @@ package app.world.elements
 
 			updateItem();
 		}
+		public function move(pX:Number, pY:Number) : CustomItem { this.x = pX; this.y = pY; return this; }
+		public function appendTo(pParent:Sprite): CustomItem { pParent.addChild(this); return this; }
+		public function on(type:String, listener:Function, useCapture:Boolean = false): CustomItem { this.addEventListener(type, listener, useCapture); return this; }
+		public function off(type:String, listener:Function, useCapture:Boolean = false): CustomItem { this.removeEventListener(type, listener, useCapture); return this; }
 
 		public function updateItem() {
 			var tScale = ConstantsApp.DEFAULT_CHARACTER_SCALE;

@@ -1,18 +1,16 @@
 package app.world
 {
+	import app.data.*;
 	import app.ui.*;
+	import app.ui.buttons.*;
 	import app.ui.common.*;
 	import app.ui.panes.*;
 	import app.ui.panes.colorpicker.*;
+	import app.ui.panes.infobar.GridManagementWidget;
 	import app.ui.screens.*;
-	import app.ui.buttons.*;
-	import app.data.*;
 	import app.world.data.*;
 	import app.world.elements.*;
 	
-	import com.adobe.images.*;
-	import com.piterwilson.utils.*;
-	import com.fewfre.utils.AssetManager;
 	import com.fewfre.display.*;
 	import com.fewfre.events.FewfEvent;
 	import com.fewfre.utils.*;
@@ -32,8 +30,9 @@ package app.world
 		internal var character		: CustomItem;
 		internal var _paneManager	: PaneManager;
 
-		internal var shopTabs		: ShopTabList;
-		internal var _toolbox		: Toolbox;
+		private var _shopTabs          : ShopTabList;
+		private var _toolbox           : Toolbox;
+		
 		// internal var linkTray		: LinkTray;
 		internal var _langScreen	: LangScreen;
 		private var _aboutScreen    : AboutScreen;
@@ -56,9 +55,9 @@ package app.world
 		private function _buildWorld(pStage:Stage) {
 			GameAssets.init();
 
-			/****************************
-			* Create CustomItem
-			*****************************/
+			/////////////////////////////
+			// Create CustomItem
+			/////////////////////////////
 			var parms:URLVariables = null;
 			try {
 				var urlPath:String = ExternalInterface.call("eval", "window.location.href");
@@ -69,103 +68,101 @@ package app.world
 				}
 			} catch (error:Error) { };
 
-			this.character = addChild(new CustomItem({ x:190, y:325,
+			this.character = new CustomItem({
 				item: GameAssets.getItemDataListByType(CategoryType.ALL[0])[0],
 				params:parms
-			})) as CustomItem;
+			}).move(190, 325).appendTo(this);
 
-			/****************************
-			* Setup UI
-			*****************************/
+			/////////////////////////////
+			// Setup UI
+			/////////////////////////////
+			_shopTabs = new ShopTabList(70, ConstantsApp.SHOP_HEIGHT).move(375, 10).appendTo(this).on(ShopTabList.TAB_CLICKED, _onTabClicked);
+			for each(var tType:CategoryType in CategoryType.ALL) {
+				_shopTabs.addTab(tType.toString(), tType.toString());
+			}
+			
 			var tShop:RoundedRectangle = new RoundedRectangle({ x:450, y:10, width:ConstantsApp.SHOP_WIDTH, height:ConstantsApp.SHOP_HEIGHT })
 				.appendTo(this).drawAsTray();
 			_paneManager = tShop.addChild(new PaneManager()) as PaneManager;
-			
-			var tabs:Vector.<Object> = new <Object>[];
-			for each(var tType:CategoryType in CategoryType.ALL) {
-				tabs.push({ text:tType.toString(), event:tType.toString() });
-			}
-			
-			this.shopTabs = new ShopTabList(70, ConstantsApp.SHOP_HEIGHT, tabs).setXY(375, 10).appendTo(this);
-			this.shopTabs.addEventListener(ShopTabList.TAB_CLICKED, _onTabClicked);
 
-			// Toolbox
-			_toolbox = addChild(new Toolbox({
-				x:188, y:28, character:character,
-				onSave:_onSaveClicked, onAnimate:_onPlayerAnimationToggle, /*onRandomize:_onRandomizeDesignClicked,*/
-				onScale:_onScaleSliderChange // onShare:_onShareButtonClicked, 
-			})) as Toolbox;
+			/////////////////////////////
+			// Top Area
+			/////////////////////////////
+			_toolbox = new Toolbox(character).move(188, 28).appendTo(this)
+				.on(Toolbox.SAVE_CLICKED, _onSaveClicked)
+				.on(Toolbox.CLIPBOARD_CLICKED, _onClipboardButtonClicked)
+				
+				.on(Toolbox.SCALE_SLIDER_CHANGE, _onScaleSliderChange);
+				// .on(Toolbox.ANIMATION_TOGGLED, _onPlayerAnimationToggle);
 			
 			/////////////////////////////
 			// Bottom Left Area
 			/////////////////////////////
-			var tLangButton:SpriteButton = LangScreen.createLangButton({ width:30, height:25, origin:0.5 })
-				.move(22, pStage.stageHeight-17).appendTo(this)
-				.onButtonClick(_onLangButtonClicked) as SpriteButton;
+			var tLangButton:GameButton = LangScreen.createLangButton(30, 25).move(22, ConstantsApp.APP_HEIGHT-17).appendTo(this)
+				.onButtonClick(_onLangButtonClicked) as GameButton;
 			
 			// About Screen Button
-			var aboutButton:GameButton = new GameButton({ width:25, height:25, origin:0.5 }).move(tLangButton.x+(tLangButton.Width/2)+2+(25/2), ConstantsApp.APP_HEIGHT - 17).appendTo(this)
+			var aboutButton:GameButton = new GameButton(25).setOrigin(0.5).move(tLangButton.x+(tLangButton.Width/2)+2+(25/2), ConstantsApp.APP_HEIGHT - 17).appendTo(this)
 				.onButtonClick(_onAboutButtonClicked) as GameButton;
-			new TextBase({ size:22, color:0xFFFFFF, bold:true, origin:0.5 }).move(0, -1).appendTo(aboutButton).setUntranslatedText("?");
+			new TextBase("?", { size:22, color:0xFFFFFF, bold:true, origin:0.5 }).move(0, -1).appendTo(aboutButton);
 			
 			if(!!(ParentApp.reopenSelectionLauncher())) {
-				new ScaleButton({ obj:new $BackArrow(), obj_scale:0.5 }).appendTo(this)
+				new ScaleButton(new $BackArrow(), 0.5).appendTo(this)
 					.move(22, ConstantsApp.APP_HEIGHT-17-28)
 					.onButtonClick(function():void{ ParentApp.reopenSelectionLauncher()(); });
 			}
 			
-			/****************************
-			* Screens
-			*****************************/
-			// linkTray = new LinkTray({ x:pStage.stageWidth * 0.5, y:pStage.stageHeight * 0.5 });
-			// linkTray.addEventListener(LinkTray.CLOSE, _onShareTrayClosed);
+			/////////////////////////////
+			// Screens
+			/////////////////////////////
+			// _shareScreen = new ShareScreen().on(Event.CLOSE, _onShareScreenClosed);
+			_langScreen = new LangScreen().on(Event.CLOSE, _onLangScreenClosed);
+			_aboutScreen = new AboutScreen().on(Event.CLOSE, _onAboutScreenClosed);
 			
-			_langScreen = new LangScreen({  });
-			_langScreen.addEventListener(LangScreen.CLOSE, _onLangScreenClosed);
-			
-			_aboutScreen = new AboutScreen();
-			_aboutScreen.addEventListener(Event.CLOSE, _onAboutScreenClosed);
-			
-			/****************************
-			* Create tabs and panes
-			*****************************/
+			/////////////////////////////
+			// Create item panes
+			/////////////////////////////
 			var tPane = null;
-			
-			tPane = _paneManager.addPane(COLOR_PANE_ID, new ColorPickerTabPane({}));
-			tPane.addEventListener(ColorPickerTabPane.EVENT_COLOR_PICKED, _onColorPickChanged);
-			tPane.addEventListener(ColorPickerTabPane.EVENT_DEFAULT_CLICKED, _onDefaultsButtonClicked);
-			tPane.addEventListener(ColorPickerTabPane.EVENT_EXIT, _onColorPickerBackClicked);
-			
-			tPane = _paneManager.addPane(COLOR_FINDER_PANE_ID, new ColorFinderPane({ }));
-			tPane.addEventListener(ColorFinderPane.EVENT_EXIT, _onColorFinderBackClicked);
-
 			// Create the panes
 			for each(var tType:CategoryType in CategoryType.ALL) {
 				tPane = _paneManager.addPane(tType.toString(), _setupPane(tType));
 			}
+			tPane = null;
+			
+			/////////////////////////////
+			// Static Panes
+			/////////////////////////////
+			// Color Picker Pane
+			_paneManager.addPane(COLOR_PANE_ID, new ColorPickerTabPane({}))
+				.on(ColorPickerTabPane.EVENT_COLOR_PICKED, _onColorPickChanged)
+				.on(ColorPickerTabPane.EVENT_DEFAULT_CLICKED, _onDefaultsButtonClicked)
+				.on(ColorPickerTabPane.EVENT_EXIT, _onColorPickerBackClicked);
+			
+			// Color Finder Pane
+			_paneManager.addPane(COLOR_FINDER_PANE_ID, new ColorFinderPane({ }))
+				.on(ColorFinderPane.EVENT_EXIT, _onColorFinderBackClicked);
 			
 			// Select First Pane
-			shopTabs.tabs[0].toggleOn();
+			_shopTabs.toggleOnFirstTab();
 			_paneManager.getPane(CategoryType.ALL[0].toString()).buttons[0].toggleOn();
-			
-			tPane = null;
 		}
 
 		private function _setupPane(pType:CategoryType) : TabPane {
 			var tPane:TabPane = new TabPane();
-			tPane.addInfoBar( new ShopInfoBar({ showEyeDropButton:true, showGridManagementButtons:true }) );
+			tPane.addInfoBar( new ShopInfoBar({ showEyeDropper:true, showDownload:true, gridManagement:{ hideRandomizeLock:true } }) );
 			_setupPaneButtons(pType, tPane, GameAssets.getItemDataListByType(pType));
-			tPane.infoBar.colorWheel.addEventListener(ButtonBase.CLICK, function(){ _colorButtonClicked(pType); });
-			tPane.infoBar.removeItemOverlay.addEventListener(MouseEvent.CLICK, function(){ _removeItem(pType); });
-			// Grid Management Events
-			tPane.infoBar.randomizeButton.addEventListener(ButtonBase.CLICK, function(){ _randomItemOfType(pType); });
-			tPane.infoBar.reverseButton.addEventListener(ButtonBase.CLICK, function(){ tPane.grid.reverse(); });
-			tPane.infoBar.rightItemButton.addEventListener(ButtonBase.CLICK, function(){ _traversePaneButtonGrid(tPane, true); });
-			tPane.infoBar.leftItemButton.addEventListener(ButtonBase.CLICK, function(){ _traversePaneButtonGrid(tPane, false); });
-			// Misc
-			if(tPane.infoBar.eyeDropButton) {
-				tPane.infoBar.eyeDropButton.addEventListener(ButtonBase.CLICK, function(){ _eyeDropButtonClicked(pType); });
-			}
+			
+			tPane.infoBar.on(ShopInfoBar.COLOR_WHEEL_CLICKED, function(){ _colorButtonClicked(pType); });
+			tPane.infoBar.on(ShopInfoBar.ITEM_PREVIEW_CLICKED, function(){ _removeItem(pType); });
+			tPane.infoBar.on(ShopInfoBar.EYE_DROPPER_CLICKED, function(){ _eyeDropButtonClicked(pType); });
+			tPane.infoBar.on(GridManagementWidget.RANDOMIZE_CLICKED, function(){ _randomItemOfType(pType); });
+			// tPane.infoBar.on(GridManagementWidget.RANDOMIZE_LOCK_CLICKED, function(e:FewfEvent){
+			// 	_character.setItemTypeLock(pType, e.data.locked);
+			// 	_updateTabListLockByItemType(pType);
+			// });
+			tPane.infoBar.addEventListener(GridManagementWidget.REVERSE_CLICKED, function(){ tPane.grid.reverse(); });
+			tPane.infoBar.addEventListener(GridManagementWidget.RIGHT_ARROW_CLICKED, function(){ _traversePaneButtonGrid(tPane, true); });
+			tPane.infoBar.addEventListener(GridManagementWidget.LEFT_ARROW_CLICKED, function(){ _traversePaneButtonGrid(tPane, false); });
 			return tPane;
 		}
 
@@ -178,7 +175,7 @@ package app.world
 			// }
 
 			var grid:Grid = pPane.grid;
-			if(!grid) { grid = pPane.addGrid( new Grid(385, buttonPerRow) ).setXY(15, 5); }
+			if(!grid) { grid = pPane.addGrid( new Grid(385, buttonPerRow) ).move(15, 5); }
 			grid.reset();
 
 			var shopItem : MovieClip;
@@ -188,16 +185,16 @@ package app.world
 				shopItem = GameAssets.getItemImage(pItemArray[i]);
 				shopItem.scaleX = shopItem.scaleY = scale;
 
-				shopItemButton = new PushButton({ width:grid.cellSize, height:grid.cellSize, obj:shopItem, id:i, data:{ type:pType, id:i } });
+				shopItemButton = new PushButton(grid.cellSize).setImage(shopItem).setData({ type:pType, id:i }) as PushButton;
 				grid.add(shopItemButton);
 				pPane.buttons.push(shopItemButton);
-				shopItemButton.addEventListener(PushButton.STATE_CHANGED_AFTER, _onItemToggled);
+				shopItemButton.onToggle(_onItemToggled);
 			}
 			pPane.UpdatePane();
 		}
 
 		private function _onMouseWheel(pEvent:MouseEvent) : void {
-			if(this.mouseX < this.shopTabs.x) {
+			if(this.mouseX < this._shopTabs.x) {
 				_toolbox.scaleSlider.updateViaMouseWheelDelta(pEvent.delta);
 				character.scale = _toolbox.scaleSlider.value;
 			}
@@ -315,6 +312,22 @@ package app.world
 				FewfDisplayUtils.saveAsPNGWithFixedCanvasSize(pObj, pName, hardcodedCanvasSaveSize as Number, pScale, 0, 0);
 			}
 		}
+
+		private function _onClipboardButtonClicked(e:Event) : void {
+			try {
+				// if(ConstantsApp.ANIMATION_DOWNLOAD_ENABLED && isCharacterAnimating()) {
+				// 	FewfDisplayUtils.copyToClipboardAnimatedGif(new Pose().applyOutfitData(character.outfitData).poseMC, 1, function(){
+				// 		_toolbox.updateClipboardButton(false, false);
+				// 	})
+				// } else {
+					FewfDisplayUtils.copyToClipboard(character.outfit, _getHardcodedSaveScale() || character.outfit.scaleX);
+					_toolbox.updateClipboardButton(false, true);
+				// }
+			} catch(e) {
+				_toolbox.updateClipboardButton(false, false);
+			}
+			setTimeout(function(){ _toolbox.updateClipboardButton(true); }, 750);
+		}
 	//#endregion Saving
 
 		private function _onItemToggled(pEvent:FewfEvent) : void {
@@ -347,7 +360,7 @@ package app.world
 			// If clicked button is toggled on, equip it. Otherwise remove it.
 			if(tButton.pushed) {
 				tData = tItemArray[pEvent.data.id];
-				setCurItemID(tType, tButton.id);
+				setCurItemID(tType, tButton.data.id);
 				this.character.setItemData(tData);
 
 				tInfoBar.addInfo( tData, GameAssets.getColoredItemImage(tData) );
@@ -397,23 +410,6 @@ package app.world
 			var tLength = tButtons.length;
 			tButtons[ Math.floor(Math.random() * tLength) ].toggleOn();
 		}
-
-		// private function _onShareButtonClicked(pEvent:Event) : void {
-		// 	var tURL = "";
-		// 	try {
-		// 		tURL = ExternalInterface.call("eval", "window.location.origin+window.location.pathname");
-		// 		tURL += "?"+this.character.getParams();
-		// 	} catch (error:Error) {
-		// 		tURL = "<error creating link>";
-		// 	};
-
-		// 	linkTray.open(tURL);
-		// 	addChild(linkTray);
-		// }
-
-		// private function _onShareTrayClosed(pEvent:Event) : void {
-		// 	removeChild(linkTray);
-		// }
 
 		private function _onLangButtonClicked(pEvent:Event) : void {
 			_langScreen.open();
@@ -480,8 +476,8 @@ package app.world
 				var tItemData = this.character.getItemData(this.currentlyColoringType);
 				var tItem:MovieClip = GameAssets.getColoredItemImage(tItemData);
 				GameAssets.copyColor(tItem, getButtonArrayByType(this.currentlyColoringType)[ getCurItemID(this.currentlyColoringType) ].Image );
-				GameAssets.copyColor(tItem, getInfoBarByType( this.currentlyColoringType ).Image );
-				GameAssets.copyColor(tItem, _paneManager.getPane(COLOR_PANE_ID).infoBar.Image);
+				getInfoBarByType( this.currentlyColoringType ).refreshItemImageUsingCurrentItemData();
+				_paneManager.getPane(COLOR_PANE_ID).infoBar.refreshItemImageUsingCurrentItemData();
 				/*var tMC:MovieClip = this.character.getItemFromIndex(this.currentlyColoringType);
 				if (tMC != null)
 				{
@@ -496,7 +492,7 @@ package app.world
 			private function _colorButtonClicked(pType:CategoryType) : void {
 				if(this.character.getItemData(this.currentlyColoringType) == null) { return; }
 
-				var tData:ItemData = getInfoBarByType(pType).data;
+				var tData:ItemData = getInfoBarByType(pType).itemData;
 				_paneManager.getPane(COLOR_PANE_ID).infoBar.addInfo( tData, GameAssets.getItemImage(tData) );
 				this.currentlyColoringType = pType;
 				(_paneManager.getPane(COLOR_PANE_ID) as ColorPickerTabPane).setupSwatches( this.character.getColors(this.currentlyColoringType) );
@@ -504,13 +500,13 @@ package app.world
 			}
 
 			private function _onColorPickerBackClicked(pEvent:Event):void {
-				_paneManager.openPane(_paneManager.getPane(COLOR_PANE_ID).infoBar.data.type.toString());
+				_paneManager.openPane(_paneManager.getPane(COLOR_PANE_ID).infoBar.itemData.type.toString());
 			}
 
 			private function _eyeDropButtonClicked(pType:CategoryType) : void {
 				if(this.character.getItemData(pType) == null) { return; }
 
-				var tData:ItemData = getInfoBarByType(pType).data;
+				var tData:ItemData = getInfoBarByType(pType).itemData;
 				var tItem:MovieClip = GameAssets.getColoredItemImage(tData);
 				var tItem2:MovieClip = GameAssets.getColoredItemImage(tData);
 				_paneManager.getPane(COLOR_FINDER_PANE_ID).infoBar.addInfo( tData, tItem );
@@ -520,7 +516,7 @@ package app.world
 			}
 
 			private function _onColorFinderBackClicked(pEvent:Event):void {
-				_paneManager.openPane(_paneManager.getPane(COLOR_FINDER_PANE_ID).infoBar.data.type.toString());
+				_paneManager.openPane(_paneManager.getPane(COLOR_FINDER_PANE_ID).infoBar.itemData.type.toString());
 			}
 		//}END Color Tab
 	}

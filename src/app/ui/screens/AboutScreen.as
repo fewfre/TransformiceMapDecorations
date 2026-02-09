@@ -4,12 +4,11 @@ package app.ui.screens
 	import app.data.GameAssets;
 	import app.ui.buttons.GameButton;
 	import app.ui.buttons.ScaleButton;
-	import app.ui.buttons.SpriteButton;
 	import app.ui.common.FancyInput;
 	import com.fewfre.data.I18n;
 	import com.fewfre.display.DisplayWrapper;
 	import com.fewfre.display.RoundRectangle;
-	import com.fewfre.display.TextBase;
+	import com.fewfre.display.TextTranslated;
 	import com.fewfre.events.FewfEvent;
 	import com.fewfre.utils.Fewf;
 	import flash.display.Bitmap;
@@ -23,7 +22,7 @@ package app.ui.screens
 	public class AboutScreen extends Sprite
 	{
 		// Storage
-		private var _translatedByText : TextBase;//TextTranslated;
+		private var _translatedByText : TextTranslated;
 		
 		// Constructor
 		public function AboutScreen() {
@@ -42,11 +41,9 @@ package app.ui.screens
 			// Version Info / Acknowledgements
 			///////////////////////
 			xx = -tWidth*0.5 + 15; yy = -tHeight*0.5 + 20;
-			// new TextTranslated("version", { originX:0, values:ConstantsApp.VERSION }).move(xx, yy).appendTo(this);
-			new TextBase({ text:"version", originX:0, values:ConstantsApp.VERSION }).move(xx, yy).appendTo(this);
+			new TextTranslated("version", { originX:0, values:ConstantsApp.VERSION }).move(xx, yy).appendTo(this);
 			yy += 20;
-			// _translatedByText = new TextTranslated("translated_by", { size:10, originX:0 }).moveT(xx, yy).appendToT(this)
-			_translatedByText = new TextBase({ text:"translated_by", size:10, originX:0 }).move(xx, yy).appendTo(this)
+			_translatedByText = new TextTranslated("translated_by", { size:10, originX:0 }).moveT(xx, yy).appendToT(this)
 			_updateTranslatedByText();
 			Fewf.dispatcher.addEventListener(I18n.FILE_UPDATED, _onFileUpdated);
 
@@ -56,14 +53,12 @@ package app.ui.screens
 			var bsize:Number = 80;
 			
 			// Github / Changelog Button
-			// new GameButton(bsize).setImage(new $GitHubIcon()).setOrigin(0.5).appendTo(this)
-			new SpriteButton({ width:bsize, height:bsize, obj:new $GitHubIcon(), origin:0.5 }).appendTo(this)
+			new GameButton(bsize).setImage(new $GitHubIcon()).setOrigin(0.5).appendTo(this)
 				.move(tWidth*0.5 - bsize/2 - 15, tHeight*0.5 - bsize/2 - 15)
 				.onButtonClick(_onSourceClicked);
 				
 			// Discord Button
-			// new GameButton(bsize).setImage(new $DiscordLogo()).setOrigin(0.5).appendTo(this)
-			new SpriteButton({ width:bsize, height:bsize, obj:new $DiscordLogo(), origin:0.5 }).appendTo(this)
+			new GameButton(bsize).setImage(new $DiscordLogo()).setOrigin(0.5).appendTo(this)
 				.move(-tWidth*0.5 + bsize/2 + 15, tHeight*0.5 - bsize/2 - 15)
 				.onButtonClick(_onDiscordClicked);
 		
@@ -75,8 +70,7 @@ package app.ui.screens
 			///////////////////////
 			// Close Button
 			///////////////////////
-			// new ScaleButton(new $WhiteX()).move(tWidth/2 - 5, -tHeight/2 + 5).appendTo(this).onButtonClick(_onCloseClicked);
-			new ScaleButton({ obj:new $WhiteX() }).move(tWidth/2 - 5, -tHeight/2 + 5).appendTo(this).onButtonClick(_onCloseClicked);
+			new ScaleButton(new $WhiteX()).move(tWidth/2 - 5, -tHeight/2 + 5).appendTo(this).onButtonClick(_onCloseClicked);
 		}
 		public function appendTo(pParent:Sprite): AboutScreen { pParent.addChild(this); return this; }
 		public function removeSelf(): AboutScreen { if(this.parent){ this.parent.removeChild(this); } return this; }
@@ -89,7 +83,7 @@ package app.ui.screens
 			
 			// Hardcoded Save Scale Input
 			yy += 28/2;
-			new TextBase({ text:"setting_hardcoded_save_scale_label", size:10, originX:0 }).move(-tBg.width/2+10, yy).appendTo(tTray);
+			new TextTranslated("setting_hardcoded_save_scale_label", { size:10, originX:0 }).moveT(-tBg.width/2+10, yy).appendToT(tTray);
 			var hardcodedCanvasSaveScale:Object = Fewf.sharedObject.getData(ConstantsApp.SHARED_OBJECT_KEY_HARDCODED_SAVE_SCALE);
 			new FancyInput({ width:210 }).setText((hardcodedCanvasSaveScale || "").toString()).setPlaceholderText("setting_hardcoded_save_scale_placeholder").move(75, yy).appendTo(tTray)
 				.setRestrict("0-9\.")
@@ -100,7 +94,7 @@ package app.ui.screens
 			
 			// Hardcoded Canvas Size Input
 			yy += 28 + 2;
-			new TextBase({ text:"setting_hardcoded_save_size_label", size:10, originX:0 }).move(-tBg.width/2+10, yy).appendTo(tTray);
+			new TextTranslated("setting_hardcoded_save_size_label", { size:10, originX:0 }).moveT(-tBg.width/2+10, yy).appendToT(tTray);
 			var hardcodedCanvasSaveSize:Object = Fewf.sharedObject.getData(ConstantsApp.SHARED_OBJECT_KEY_HARDCODED_CANVAS_SAVE_SIZE);
 			new FancyInput({ width:210 }).setText((hardcodedCanvasSaveSize || "").toString()).setPlaceholderText("setting_hardcoded_save_size_placeholder").move(75, yy).appendTo(tTray)
 				.setRestrict("0-9")

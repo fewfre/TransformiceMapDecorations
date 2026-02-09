@@ -1,44 +1,49 @@
 package app.ui.common
 {
-	import com.fewfre.display.TextBase;
+	import com.fewfre.display.RoundRectangle;
+	import com.fewfre.display.TextTranslated;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.FocusEvent;
 	import flash.text.TextField;
 	import flash.text.TextFieldType;
 	
-	public class FancyInput extends Sprite
+	public class FancyInput
 	{
 		// Storage
-		private var _textField			: TextField;
-		private var _placeholderText	: TextBase;
+		private var _root			: Sprite;
+		private var _textField       : TextField;
+		private var _placeholderText : TextTranslated;
+		private var _background      : RoundRectangle;
 		
 		// Properties
+		public function get root() : Sprite { return _root; }
 		public function get text() : String { return _textField.text; }
 		public function set text(pVal:String) : void { setText(pVal); }
 		public function get field() : TextField { return _textField; }
-		public function get placeholderTextBase() : TextBase { return _placeholderText; }
+		public function get placeholderTextBase() : TextTranslated { return _placeholderText; }
 		
 		// Constructor
 		// pData = { width?:Number, height?:Number=18, padding?:Number=5 }
 		public function FancyInput(pData:Object) {
+			_root = new Sprite();
 			var padding = pData.padding != null ? pData.padding : 5;
 			
 			var tTFWidth:Number = pData.width ? pData.width : 250;
 			var tTFHeight:Number = pData.height ? pData.height : 18;
 			// So much easier than doing it with those darn native text field options which have no padding.
-			var tTextBackground:RoundedRectangle = new RoundedRectangle({ width:tTFWidth+padding*2, height:tTFHeight+padding*2, origin:0.5 })
-				.appendTo(this).draw(0xdcdfea, 7, 0x444444);
+			_background = new RoundRectangle(tTFWidth+padding*2, tTFHeight+padding*2).toOrigin(0.5)
+				.appendTo(_root).toRadius(7).draw3d(0xdcdfea, 0x444444);
 			
-			_textField = tTextBackground.addChild(new TextField()) as TextField;
+			_textField = _root.addChild(new TextField()) as TextField;
 			_textField.type = TextFieldType.INPUT;
 			_textField.multiline = false;
 			_textField.width = tTFWidth;
 			_textField.height = tTFHeight;
-			_textField.x = padding - tTextBackground.Width*0.5;
-			_textField.y = padding - tTextBackground.Height*0.5;
+			_textField.x = padding - _background.width*0.5;
+			_textField.y = padding - _background.height*0.5;
 			
-			_placeholderText = tTextBackground.addChild(new TextBase({ text:"", originX:0, x:_textField.x+4, color:0x666666 })) as TextBase;
+			_placeholderText = new TextTranslated("", { originX:0, x:_textField.x+4, color:0x666666 }).appendToT(_root);
 			_placeholderText.mouseChildren = false;
 			_placeholderText.mouseEnabled = false;
 			
@@ -48,8 +53,8 @@ package app.ui.common
 			_textField.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, _onFocusOut);
 			_textField.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, _onFocusOut);
 		}
-		public function move(pX:Number, pY:Number) : FancyInput { this.x = pX; this.y = pY; return this; }
-		public function appendTo(pParent:Sprite): FancyInput { pParent.addChild(this); return this; }
+		public function move(pX:Number, pY:Number) : FancyInput { _root.x = pX; _root.y = pY; return this; }
+		public function appendTo(pParent:Sprite): FancyInput { pParent.addChild(_root); return this; }
 		public function on_field(type:String, listener:Function): FancyInput { _textField.addEventListener(type, listener); return this; }
 		public function off_field(type:String, listener:Function): FancyInput { _textField.removeEventListener(type, listener); return this; }
 		

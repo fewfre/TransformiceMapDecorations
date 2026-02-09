@@ -5,6 +5,7 @@ package app
 	import com.fewfre.utils.*;
 	import flash.display.*;
 	import flash.events.*;
+	import app.data.ConstantsApp;
 
 	[SWF(backgroundColor="0x6A7495" , width="900" , height="425")]
 	public class Main extends MovieClip
@@ -13,7 +14,7 @@ package app
 		private var _loaderDisplay : LoaderDisplay;
 		private var _world         : World;
 		private var _config        : Object;
-		private var _defaultLang   : String;
+		private var _systemDetectedDefaultLang : String;
 		
 		// Constructor
 		public function Main() {
@@ -35,7 +36,7 @@ package app
 
 			BrowserMouseWheelPrevention.init(stage);
 
-			_loaderDisplay = addChild( new LoaderDisplay({ x:stage.stageWidth * 0.5, y:stage.stageHeight * 0.5 }) ) as LoaderDisplay;
+			_loaderDisplay = new LoaderDisplay(ConstantsApp.CENTER_X, ConstantsApp.CENTER_Y).appendTo(this);
 			
 			_startPreload();
 		}
@@ -47,21 +48,21 @@ package app
 		}
 		
 		private function _onPreloadComplete() : void {
-			_config = Fewf.assets.getData("config");
-			_defaultLang = Fewf.i18n.getDefaultLang();
+			_config = Fewf.config;
+			_systemDetectedDefaultLang = Fewf.i18n.getSystemDetectedDefaultLangCodeOrFallback();
+			
+			if(Fewf.config.upload2imgur_url) Fewf.config.upload2imgur_url.replace("https://", Fewf.networkProtocol+"://");
 			
 			_startInitialLoad();
 		}
 		
 		private function _startInitialLoad() : void {
-			_load([
-				Fewf.swfUrlBase+"resources/i18n/"+_defaultLang+".json",
-			], Fewf.assets.getData("config").cachebreaker, _onInitialLoadComplete);
+			var tLangCodes : Array = [ Fewf.i18n.getConfigDefaultLangCode() ];
+			if(tLangCodes.indexOf(_systemDetectedDefaultLang) == -1) tLangCodes.push(_systemDetectedDefaultLang);
+			Fewf.i18n.loadLanguagesIfNeededAndUseLastLang(tLangCodes, _onInitialLoadComplete);
 		}
 		
 		private function _onInitialLoadComplete() : void {
-			Fewf.i18n.parseFile(_defaultLang, Fewf.assets.getData(_defaultLang));
-			
 			_startLoad();
 		}
 		
@@ -75,12 +76,11 @@ package app
 			var tPack = _config.packs.items;
 			for(var i:int = 0; i < tPack.length; i++) { tPacks.push(Fewf.swfUrlBase+"resources/"+tPack[i]); }
 			
-			_load(tPacks, Fewf.assets.getData("config").cachebreaker, _onLoadComplete);
+			_load(tPacks, Fewf.config.cachebreaker, _onLoadComplete);
 		}
 		
 		private function _onLoadComplete() : void {
-			_loaderDisplay.destroy();
-			removeChild( _loaderDisplay );
+			_loaderDisplay.removeSelf().destroy();
 			_loaderDisplay = null;
 			
 			_world = addChild(new World(stage)) as World;

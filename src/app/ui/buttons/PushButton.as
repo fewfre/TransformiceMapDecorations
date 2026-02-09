@@ -1,121 +1,113 @@
 package app.ui.buttons
-{
-	import com.fewfre.display.*;
-	import com.fewfre.utils.*;
-	import app.data.*;
-	import app.ui.*;
-	import flash.display.*;
+{	
+	import app.data.ConstantsApp;
+	import com.fewfre.display.TextTranslated;
+	import com.fewfre.utils.FewfDisplayUtils;
+	import flash.display.DisplayObject;
 	import flash.events.MouseEvent;
-	import flash.text.*;
-	import flash.geom.*;
-	
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
+
 	public class PushButton extends GameButton
 	{
 		// Constants
-		public static const STATE_CHANGED_BEFORE:String="state_changed_before";
-		public static const STATE_CHANGED_AFTER:String="state_changed_after";
+		public static const TOGGLE:String="state_changed_after";
+		public static const PUSHED:String="pushed";
+		public static const UNPUSHED:String="unpushed";
 		
 		// Storage
-		public var id:int;
-		public var pushed:Boolean;
-		public var allowToggleOff:Boolean; // Only controls the behavior on internal click controls.
-		public var Text:TextBase;
-		public var Image:DisplayObject;
+		protected var _pushed:Boolean;
+		protected var _allowToggleOff:Boolean; // Only controls the behavior on internal click controls.
+		
+		// Properties
+		public function get pushed() : Boolean { return _pushed; }
+		public function get allowToggleOff() : Boolean { return _allowToggleOff; }
 		
 		// Constructor
-		// pArgs = { x:Number, y:Number, width:Number, height:Number, ?obj:DisplayObject, ?obj_scale:Number, ?text:String, ?id:int, ?allowToggleOff:Boolean=true }
-		public function PushButton(pArgs:Object)
-		{
-			super(pArgs);
-			if(pArgs.id) { id = pArgs.id; }
+		// If pHeight isn't set it will default to the same as the width
+		public function PushButton(pWidth:Number, pHeight:Number=NaN) {
+			super(pWidth, pHeight);
 			
-			if(pArgs.text) {
-				this.Text = addChild(new TextBase({ text:pArgs.text, x:pArgs.width*(0.5 - _bg.originX), y:pArgs.height*(0.5 - _bg.originY) })) as TextBase;
-			}
-			
-			if(pArgs.obj) {
-				var tBounds:Rectangle = pArgs.obj.getBounds(pArgs.obj);
-				var tOffset:Point = tBounds.topLeft;
-				
-				var tScale:Number = pArgs.obj_scale ? pArgs.obj_scale : 1;
-				this.Image = pArgs.obj;
-				FewfDisplayUtils.fitWithinBounds(this.Image, pArgs.width * 0.9, pArgs.height * 0.9, pArgs.width * 0.5, pArgs.height * 0.5);
-				this.Image.x = pArgs.width / 2 - (tBounds.width / 2 + tOffset.x)*tScale * this.Image.scaleX;
-				this.Image.y = pArgs.height / 2 - (tBounds.height / 2 + tOffset.y)*tScale * this.Image.scaleY;
-				this.Image.scaleX *= tScale;
-				this.Image.scaleY *= tScale;
-				addChild(this.Image);
-			}
-			
-			this.allowToggleOff = pArgs.allowToggleOff == null ? true : pArgs.allowToggleOffs;
-			this.pushed = false;
+			_pushed = false;
+			_allowToggleOff = true;
 			_renderUnpressed();
 		}
+		public function setAllowToggleOff(pVal:Boolean) : PushButton { _allowToggleOff = pVal; return this; }
+		public function onToggle(listener:Function, useCapture:Boolean = false): PushButton { return this.on(PushButton.TOGGLE, listener, useCapture) as PushButton; }
 		
-		protected function _renderUnpressed() : void
-		{
+		protected function _renderUnpressed() : void {
 			super._renderUp();
-			if(this.Text) { this.Text.color = 0xC2C2DA; }
+			if(_text) { _text.color = 0xC2C2DA; }
 		}
 
-		protected function _renderPressed() : void
-		{
-			_bg.draw(ConstantsApp.COLOR_BUTTON_MOUSE_DOWN, 7, 0x5D7A91, 0x5D7A91, 0x6C8DA8);
-			if(this.Text) { this.Text.color = 0xFFD800; }
+		protected function _renderPressed() : void {
+			_bg.draw3d(ConstantsApp.COLOR_BUTTON_MOUSE_DOWN, 0x5D7A91, 0x5D7A91, 0x6C8DA8);
+			if(_text) { _text.color = 0xFFD800; }
 		}
 
-		public function toggle(pOn:*=null, pFireEvent:Boolean=true) : void
-		{
-			if(pFireEvent) _dispatch(STATE_CHANGED_BEFORE);
+		public function toggle(pOn:*=null, pFireEvent:Boolean=true) : PushButton {
+			_pushed = pOn != null ? pOn : !_pushed;
+			if(_pushed) _renderPressed();
+			else _renderUnpressed();
 			
-			this.pushed = pOn != null ? pOn : !this.pushed;
-			if(this.pushed) {
-				_renderPressed();
-			} else {
-				_renderUnpressed();
+			if(pFireEvent) {
+				_dispatch(TOGGLE);
+				_dispatch(_pushed ? PUSHED : UNPUSHED);
 			}
-			
-			if(pFireEvent) _dispatch(STATE_CHANGED_AFTER);
+			return this;
 		}
 		
-		public function toggleOn(pFireEvent:Boolean=true) : void {
-			toggle(true, pFireEvent);
+		public function toggleOn(pFireEvent:Boolean=true) : PushButton {
+			return toggle(true, pFireEvent);
 		}
 
-		public function toggleOff(pFireEvent:Boolean=false) : void {
-			toggle(false, pFireEvent);
+		public function toggleOff(pFireEvent:Boolean=false) : PushButton {
+			return toggle(false, pFireEvent);
 		}
 		
 		override protected function _onMouseUp(pEvent:MouseEvent) : void {
-			if(!_flagEnabled || (!this.allowToggleOff && this.pushed)) { return; }
-			toggle();
+			if(!_flagEnabled) { return; }
+			var pOn = null;
+			// if toggle off enabled, then still allow clicking the button again to refire event
+			if(!_allowToggleOff && _pushed) { pOn = true; }
+			toggle(pOn);
 			super._onMouseUp(pEvent);
 		}
 		
 		override protected function _renderUp() : void {
-			if (this.pushed == false) {
+			if (_pushed == false) {
 				super._renderUp();
 			}
 		}
 		
 		override protected function _renderDown() : void {
-			if (this.pushed == false) {
-				if(this.Text) this.Text.color = 0xC2C2DA;
+			if (_pushed == false) {
 				super._renderDown();
 			}
 		}
 		
 		override protected function _renderOver() : void {
-			if (this.pushed == false) {
-				if(this.Text) this.Text.color = 0x012345;
+			if (_pushed == false) {
 				super._renderOver();
 			}
 		}
 		
 		override protected function _renderOut() : void {
-			if(this.pushed == false) {
-				if(this.Text) this.Text.color = 0xC2C2DA;
+			if(_pushed == false) {
 				super._renderOut();
+			}
+		}
+		
+		/////////////////////////////
+		// Static
+		/////////////////////////////
+		// Convience method to deal with PushButtons that can only have 1 of each selected (todo: create a manager or something for this?)
+		// Doesn't fire event, as this is just to update the visual states
+		public static function untoggleAll(pList:Vector.<PushButton>, pActiveButtonToSkip:PushButton=null) : void {
+			for(var i:int = 0; i < pList.length; i++) {
+				if (pList[i].pushed && pList[i] != pActiveButtonToSkip) {
+					pList[i].toggleOff(false);
+				}
 			}
 		}
 	}

@@ -55,12 +55,11 @@ package app.ui.panes.colorpicker
 				
 				var length = Math.min(colors.length, 9);
 				var btnSize = 70, spacing = 10, columns = 3,
-				tX = -(btnSize+spacing) * (columns-1)/2, tY = -(btnSize+spacing) * (columns-1)/2;
+				xx = -(btnSize+spacing) * (columns-1)/2, yy = -(btnSize+spacing) * (columns-1)/2;
 				for(var i = 0; i < length; i++) {
-					var color = colors[i];
-					var btn = new ColorButton({ color:color, x:tX+((i%columns) * (btnSize+spacing)), y:tY+(Math.floor(i/columns)*(btnSize+spacing)), size:btnSize });
-					btn.onButtonClick(_onHistoryColorClicked);
-					this.addChild(btn);
+					new ColorButton(colors[i], btnSize).appendTo(this)
+						.move(xx+((i%columns) * (btnSize+spacing)), yy+(Math.floor(i/columns)*(btnSize+spacing)))
+						.onButtonClick(_onHistoryColorClicked);
 				}
 			}
 		}

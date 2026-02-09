@@ -1,243 +1,282 @@
 package app.ui
 {
-	import com.fewfre.display.TextBase;
-	import com.fewfre.utils.*;
-	import com.adobe.images.*;
-	import app.data.*;
-	import app.data.*;
-	import app.ui.*;
-	import app.ui.buttons.*;
-	import app.ui.common.*;
-	import app.world.data.*;
-	import flash.display.*;
-	import flash.events.*;
-	import flash.geom.*;
-	import flash.net.*;
-	import flash.text.*;
+	import app.data.ConstantsApp;
+	import app.data.GameAssets;
+	import app.ui.buttons.GameButton;
+	import app.ui.buttons.ScaleButton;
+	import app.ui.panes.infobar.GridManagementWidget;
+	import app.world.data.ItemData;
+	import com.fewfre.display.DisplayWrapper;
+	import com.fewfre.display.RoundRectangle;
+	import com.fewfre.display.TextTranslated;
+	import com.fewfre.utils.FewfDisplayUtils;
+	import flash.display.DisplayObject;
+	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	
-	public class ShopInfoBar extends MovieClip
+	public class ShopInfoBar extends Sprite
 	{
+		// Constants
+		public static const BACK_CLICKED            : String = "back_clicked";
+		public static const ITEM_PREVIEW_CLICKED    : String = "item_preview_clicked";
+		public static const COLOR_WHEEL_CLICKED     : String = "color_wheel_clicked";
+		public static const EYE_DROPPER_CLICKED     : String = "eye_dropper_clicked";
+		
 		// Storage
-		public var Width			: Number;
-		public var data				: ItemData;
+		public var Width                 : Number;
+		public var _itemData             : ItemData;
 		
-		private var _leftButtonsTray	: Sprite;
-		private var _gridManagmentTray	: Sprite;
+		private var _image               : DisplayObject;
+		private var _imageCont           : RoundRectangle;
+		private var _removeItemOverlay   : Sprite;
 		
-		public var Image				: MovieClip;
-		private var _imageCont			: RoundedRectangle;
-		public var removeItemOverlay	: Sprite;
+		private var _backButton          : ScaleButton;
+		private var _colorWheel          : ScaleButton;
+		private var _leftButtonsTray     : Sprite;
+		private var _idText              : TextTranslated;
+		private var _eyeDropperButton    : GameButton;
 		
-		public var Text				: TextBase;
-		public var colorWheel		: ScaleButton;
-		public var eyeDropButton	: SpriteButton;
+		private var _rightSideTray       : Sprite;
+		private var _downloadButton      : GameButton;
 		
-		public var downloadButton		: SpriteButton;
-		
-		public var randomizeButton		: SpriteButton;
-		public var randomizeLockButton	: PushButton;
-		public var reverseButton		: SpriteButton;
-		public var leftItemButton		: SpriteButton;
-		public var rightItemButton		: SpriteButton;
+		private var _gridManagementWidget : GridManagementWidget;
 		
 		private static const BTN_SIZE : int = 24;
 		private static const BTN_Y : int = 26;
 		
 		// Properties
-		public function get hasData() : Boolean { return data != null; }
-		public function get isRefreshLocked() : Boolean { return randomizeLockButton.pushed; }
+		public function get hasData() : Boolean { return _itemData != null; }
+		public function get itemData() : ItemData { return _itemData; }
+		public function get isRefreshLocked() : Boolean { return !!_gridManagementWidget && _gridManagementWidget.isRefreshLocked; }
 		
 		// Constructor
-		// pData = { ?showBackButton:Boolean = false, ?showGridManagementButtons:Boolean = false }
+		// pData = { ?showBackButton:bool=false, ?hideItemPreview:bool=false, ?showEyeDropper:bool=false,
+		//           ?showDownload:bool=false, ?gridManagement:(bool|{})=false }
 		public function ShopInfoBar(pData:Object=null) {
 			super();
 			pData = pData==null ? {} : pData;
 			this.Width = ConstantsApp.PANE_WIDTH;
-			data = null;
 			
 			/********************
 			* Active Item
 			*********************/
-			_imageCont = addChild(new RoundedRectangle({ x:0, y:0, width:50, height:50 })) as RoundedRectangle;
-			_imageCont.draw(ConstantsApp.APP_BG_COLOR, 15, 0x5d7d90, 0x11171c, 0x3c5064);
+			// 0x5d7d90, 0x11171c, 0x3c5064
+			_imageCont = RoundRectangle.square(50).toRadius(15).drawSolid(ConstantsApp.APP_BG_COLOR, 0x3c5064, 1.25).appendTo(this);
 			
 			_setNoItemImage();
 			
 			// Overlay that shows up when hovering over image
-			removeItemOverlay = addChild(new Sprite()) as Sprite;
-			removeItemOverlay.graphics.beginFill(0, 0);
-			removeItemOverlay.graphics.drawRoundRect(0, 0, _imageCont.Width, _imageCont.Height, 15, 15);
-			removeItemOverlay.graphics.endFill();
+			_removeItemOverlay = addChild(new Sprite()) as Sprite;
+			_removeItemOverlay.graphics.beginFill(0, 0);
+			_removeItemOverlay.graphics.drawRoundRect(0, 0, _imageCont.width, _imageCont.height, 15, 15);
+			_removeItemOverlay.graphics.endFill();
 			
-			var rioVisual:Sprite = removeItemOverlay.addChild(new Sprite()) as Sprite;
-			rioVisual.x = rioVisual.y = _imageCont.Width*0.5;
-			rioVisual.alpha = 0;
+			// Contains what's actually shown on hover for _removeItemOverlay
+			var rioVisual:Sprite = DisplayWrapper.wrap(new Sprite(), _removeItemOverlay)
+				.toAlpha(0).move(_imageCont.width*0.5, _imageCont.height*0.5).asSprite;
+			RoundRectangle.square(50).toOrigin(0.5).toAlpha(0.1).toRadius(15).drawSolid(0x000000, 0x000000, 1.25).appendTo(rioVisual);
+			DisplayWrapper.wrap(new $No(), rioVisual).toAlpha(0.5).toScale(0.75);
 			
-			var rioBackdrop:RoundedRectangle = rioVisual.addChild(new RoundedRectangle({ origin:0.5, width:50, height:50 })) as RoundedRectangle;
-			rioBackdrop.draw(0x000000, 15, 0x000000);
-			rioBackdrop.alpha = 0.1;
-			
-			var rioIcon:DisplayObject = rioVisual.addChild(new $No());
-			rioIcon.alpha = 0.5;
-			rioIcon.scaleX = rioIcon.scaleY = 0.75;
-			
-			removeItemOverlay.addEventListener(MouseEvent.MOUSE_OVER, function():void{
+			_removeItemOverlay.addEventListener(MouseEvent.MOUSE_OVER, function():void{
 				if(hasData) {
 					rioVisual.alpha = 1;
 				}
 			});
-			removeItemOverlay.addEventListener(MouseEvent.MOUSE_OUT, function():void{ rioVisual.alpha = 0; });
-			removeItemOverlay.addEventListener(MouseEvent.CLICK, function():void{ rioVisual.alpha = 0; });
+			_removeItemOverlay.addEventListener(MouseEvent.MOUSE_OUT, function():void{ rioVisual.alpha = 0; });
+			_removeItemOverlay.addEventListener(MouseEvent.CLICK, function():void{ rioVisual.alpha = 0;
+				dispatchEvent(new Event(ITEM_PREVIEW_CLICKED));
+			});
 			
 			/********************
-			* Color Wheel
+			* Color Wheel / Back Button
 			*********************/
-			this.colorWheel = addChild(new ScaleButton({ x:80, y:24, obj:pData.showBackButton ? new $BackArrow() : new $ColorWheel() })) as ScaleButton;
-			this.colorWheel.x = _imageCont.x + _imageCont.Width + this.colorWheel.Image.width*0.5 + 10;
-			this.colorWheel.y = 25;
-			// Add event listener in Main
-			
-			// setup left tray
+			// setup left tray - need to defined before color wheel show/hide since the function moves it
 			_leftButtonsTray = addChild(new Sprite()) as Sprite;
-			showColorWheel(pData.showBackButton);
+			
+			if(!pData.showBackButton) {
+				_colorWheel = new ScaleButton(new $ColorWheel()).appendTo(this) as ScaleButton;
+				_colorWheel.move(_imageCont.x + _imageCont.width + _colorWheel.image.width*0.5 + 10, 25)
+					.onButtonClick(dispatchEventHandler(COLOR_WHEEL_CLICKED));
+				showColorWheel(false);
+			} else {
+				_backButton = new ScaleButton(new $BackArrow()).appendTo(this) as ScaleButton;
+				_backButton.move(_imageCont.x + _imageCont.width + _backButton.image.width*0.5 + 10, 25)
+					.on(MouseEvent.MOUSE_UP, dispatchEventHandler(BACK_CLICKED));
+				_rearrangeLeftButtonsTray();
+			}
 			
 			/********************
 			* Text
 			*********************/
-			this.Text = _leftButtonsTray.addChild(new TextBase({ text:"infobar_id", x:0, y:0, size:18, origin:0, alpha:0 })) as TextBase;
-			if(pData.showBackButton) {
-				this.Text.y = 13;
+			_idText = new TextTranslated("infobar_id", { x:0, y:-1, size:18, origin:0, alpha:0 }).appendToT(_leftButtonsTray);
+			if(pData.showBackButton && (!pData.showEyeDropper && !pData.showFavorites && !pData.gridManagement)) {
+				_idText.y = 13;
 			}
 			
 			/********************
 			* Image Buttons
 			*********************/
-			if(pData.showEyeDropButton) {
-				eyeDropButton = _leftButtonsTray.addChild(new SpriteButton({ x:0, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.45, obj:new $EyeDropper() })) as SpriteButton;
-				eyeDropButton.disable().alpha = 0;
+			if(pData.showEyeDropper) {
+				_eyeDropperButton = new GameButton(BTN_SIZE).setImage(new $EyeDropper(), 0.45).move(0, BTN_Y).appendTo(_leftButtonsTray) as GameButton;
+				_eyeDropperButton.onButtonClick(dispatchEventHandler(EYE_DROPPER_CLICKED));
+				_eyeDropperButton.disable().setAlpha(0);
 			}
 			
 			/********************
 			* Grid Management Buttons
 			*********************/
-			if(pData.showGridManagementButtons) {
-				var tX = 0, spacing = 2;
-				
-				var tray:Sprite = _gridManagmentTray = addChild(new Sprite()) as Sprite;
-				tray.x = this.Width*0.5-20;
-				
-				// Randomization buttons
-				randomizeButton = tray.addChild(new SpriteButton({ x:tX, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.8, obj:new $Dice() })) as SpriteButton;
-				tX += BTN_SIZE + spacing;
-				
-				randomizeLockButton = tray.addChild(new PushButton({ x:tX, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.8, obj:new $Lock() })) as PushButton;
-				randomizeLockButton.addEventListener(PushButton.STATE_CHANGED_AFTER, function():void{ isRefreshLocked ? randomizeButton.disable() : randomizeButton.enable(); });
-				tX += BTN_SIZE + spacing;
-				
-				tX += 8; // Add larger gap
-				
-				// List reversal button
-				reverseButton = tray.addChild(new SpriteButton({ x:tX, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.7, obj:new $FlipIcon() })) as SpriteButton;
-				tX += BTN_SIZE + spacing;
-				
-				tX += 8; // Add larger gap
-				
-				// Arrow buttons
-				leftItemButton = tray.addChild(new SpriteButton({ x:tX, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.45, obj:new $BackArrow() })) as SpriteButton;
-				tX += BTN_SIZE + spacing;
-				rightItemButton = tray.addChild(new SpriteButton({ x:tX, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.45, obj:new $BackArrow() })) as SpriteButton;
-				rightItemButton.Image.rotation = 180;
-				tX += BTN_SIZE + spacing;
+			if(pData.gridManagement) {
+				var widgetProps:Object = pData.gridManagement is Boolean ? {} : pData.gridManagement; // If a boolean ("true") use defaults
+				_gridManagementWidget = new GridManagementWidget(widgetProps).move(this.Width*0.5-20+(144/2), BTN_Y).appendTo(this);
+				_gridManagementWidget.on(GridManagementWidget.RANDOMIZE_CLICKED, function(e):void{ dispatchEvent(e); })
+				_gridManagementWidget.on(GridManagementWidget.RANDOMIZE_LOCK_CLICKED, function(e):void{ dispatchEvent(e); })
+				_gridManagementWidget.on(GridManagementWidget.REVERSE_CLICKED, function(e):void{ dispatchEvent(e); })
+				_gridManagementWidget.on(GridManagementWidget.LEFT_ARROW_CLICKED, function(e):void{ dispatchEvent(e); })
+				_gridManagementWidget.on(GridManagementWidget.RIGHT_ARROW_CLICKED, function(e):void{ dispatchEvent(e); });
+				FewfDisplayUtils.alignChildrenAroundAnchor(_gridManagementWidget, 0.5, null);
 			}
 			
 			/********************
 			* Right Side Buttons
 			*********************/
-			downloadButton = addChild(new SpriteButton({ x:this.Width-BTN_SIZE, y:BTN_Y, width:BTN_SIZE, height:BTN_SIZE, obj_scale:0.45, obj:new $SimpleDownload() })) as SpriteButton;
-			downloadButton.onButtonClick(saveSprite);
-			downloadButton.disable().alpha = 0;
+			_rightSideTray = DisplayWrapper.wrap(new Sprite(), this).move(this.Width, 0).asSprite;
+			if(pData.showDownload) {
+				(_downloadButton = new GameButton(BTN_SIZE)).setImage(new $SimpleDownload(), 0.45).move(-BTN_SIZE, BTN_Y).appendTo(_rightSideTray);
+				_downloadButton.onButtonClick(_saveSprite);
+				_downloadButton.disable().setAlpha(0);
+			}
 			
 			// Line separating infobar and contents below it
 			GameAssets.createHorizontalRule(5, 53, this.Width-10).appendTo(this);
-		}
-
-		public function ChangeImage(pMC:MovieClip) : void {
-			if(this.Image != null) { _imageCont.removeChild(this.Image); }
 			
-			var tBounds:Rectangle = pMC.getBounds(pMC);
+			if(pData.hideItemPreview) {
+				hideImageCont();
+			}
+			
+			_repositionGridManagementWidget();
+		}
+		public function move(pX:Number, pY:Number) : ShopInfoBar { x = pX; y = pY; return this; }
+		public function appendTo(pParent:Sprite): ShopInfoBar { pParent.addChild(this); return this; }
+		public function on(type:String, listener:Function): ShopInfoBar { this.addEventListener(type, listener); return this; }
+		public function off(type:String, listener:Function): ShopInfoBar { this.removeEventListener(type, listener); return this; }
+
+		public function changeImage(pImage:DisplayObject) : void {
+			if(_image != null) { _imageCont.removeChild(_image); }
+			
+			var tBounds:Rectangle = pImage.getBounds(pImage);
 			var tOffset:Point = tBounds.topLeft;
 			
 			// Make sure it's always big enough before being fit to have to be scaled down (to avoid extra whitespace)
-			pMC.scaleX *= 2; pMC.scaleY *= 2;
-			this.Image = pMC;
-			FewfDisplayUtils.fitWithinBounds(this.Image, _imageCont.Width, _imageCont.Height, _imageCont.Width * 0.5, _imageCont.Height * 0.5);
-			this.Image.mouseEnabled = false;
-			this.Image.scaleX *= 0.8;
-			this.Image.scaleY *= 0.8;
-			this.Image.x = _imageCont.Width / 2 - (tBounds.width / 2 + tOffset.x) * this.Image.scaleX;
-			this.Image.y = _imageCont.Height / 2 - (tBounds.height / 2 + tOffset.y) * this.Image.scaleY;
-			_imageCont.addChild(this.Image);
+			pImage.scaleX *= 2; pImage.scaleY *= 2;
+			_image = pImage;
+			FewfDisplayUtils.fitWithinBounds(_image, _imageCont.width, _imageCont.height, _imageCont.width * 0.5, _imageCont.height * 0.5);
+			if(_image is Sprite) { (_image as Sprite).mouseEnabled = false; }
+			_image.scaleX *= 0.8;
+			_image.scaleY *= 0.8;
+			_image.x = _imageCont.width / 2 - (tBounds.width / 2 + tOffset.x) * _image.scaleX;
+			_image.y = _imageCont.height / 2 - (tBounds.height / 2 + tOffset.y) * _image.scaleY;
+			_imageCont.addChild(_image);
 		}
 		
-		public function showColorWheel(pVal:Boolean=true) : void {
-			if(pVal) {
-				colorWheel.enable().alpha = 1;
-				_leftButtonsTray.x = colorWheel.x + colorWheel.Image.width*0.5 + 12;
+		public function showColorWheel(pShow:Boolean=true) : void {
+			if(_colorWheel) {
+				_colorWheel.toggleEnabled(pShow).setAlpha(pShow ? 1 : 0).setVisible(pShow);
+			}
+			_rearrangeLeftButtonsTray();
+			_repositionGridManagementWidget();
+		}
+		
+		public function addCustomObjectToRightSideTray(pObj:DisplayObject) : void {
+			_rightSideTray.addChild(pObj);
+			_repositionGridManagementWidget();
+		}
+		
+		public function _rearrangeLeftButtonsTray() : void {
+			var btn:ScaleButton = _colorWheel || _backButton;
+			if(btn.visible && btn.alpha > 0) {
+				_leftButtonsTray.x = btn.x + btn.image.width*0.5 + 12;
 			} else {
-				colorWheel.disable().alpha = 0;
-				_leftButtonsTray.x = _imageCont.x + _imageCont.Width + 10;
+				_leftButtonsTray.x = _imageCont.x + _imageCont.width + 10;
+			}
+		}
+		
+		public function _repositionGridManagementWidget() : void {
+			if(_gridManagementWidget) {
+				var ll:Number = 0, rr:Number = _rightSideTray.x - _rightSideTray.width;//_rightSideTray.getRect(this).left; <-- this was return a huge number for filter selection screens; idk why
+				// Find left most x that's that has empty space - note that in most cases we need to assume it's there even
+				// if invisible, since that means it can be toggled on, and we don't want it shifting
+				if(_imageCont && _imageCont.visible) ll += _imageCont.width; // In this case invisible is the same as not existing
+				if(_colorWheel) ll += _colorWheel.image.width + 10;
+				if(_backButton) ll += _backButton.image.width + 10;
+				if(_eyeDropperButton) ll += _eyeDropperButton.width + 10;
+				// if(_favoriteButton) ll += _favoriteButton.width + 3;
+				// Apply
+				_gridManagementWidget.x = ll + (rr - ll) / 2;
+				// new RoundRectangle(1, 10).move(ll, 0).appendTo(this).drawSolid(0, 0x0000FF);
+				// new RoundRectangle(1, 10).move(rr, 0).appendTo(this).drawSolid(0, 0xFF0000);
 			}
 		}
 		
 		public function hideImageCont() : void {
 			_imageCont.visible = false;
-			removeItemOverlay.visible = false;
-			colorWheel.x = colorWheel.Image.width*0.5 + 10;
-			if(_gridManagmentTray) _gridManagmentTray.x = this.Width*0.5-(25*5 + 3*4 + 8*2)*0.5; // Center tray
+			_removeItemOverlay.visible = false;
+			if(_colorWheel) _colorWheel.x = _colorWheel.image.width*0.5 + 10;
+			if(_backButton) _backButton.x = _backButton.image.width*0.5 + 10;
+			_repositionGridManagementWidget();
 		}
 		
 		private function _updateID() : void {
-			this.Text.setValues(data.id);
+			var tText:String = _itemData.id;
+			_idText.setValues(tText);
 		}
 		
-		public function addInfo(pData:ItemData, pMC:MovieClip) : void {
+		public function refreshItemImageUsingCurrentItemData() : void {
+			if(!_itemData) return;
+			changeImage(GameAssets.getColoredItemImage(_itemData));
+		}
+		
+		public function addInfo(pData:ItemData, pImage:DisplayObject) : void {
 			if(pData == null) { return; }
-			data = pData;
-			// if(data.type == ITEM.POSE || data.type == ITEM.SKIN) {
-			// 	pMC.scaleX = pMC.scaleY = 1;
-			// }
-			ChangeImage(pMC);
+			_itemData = pData;
+			changeImage(pImage);
 			_updateID();
 			
-			Text.alpha = 1;
-			downloadButton.enable().alpha = 1;
-			if(eyeDropButton) eyeDropButton.enable().alpha = 1;
+			_idText.alpha = 1;
+			if(_downloadButton) _downloadButton.enable().setAlpha(1);
+			if(_eyeDropperButton) _eyeDropperButton.enable().setAlpha(1);
 		}
 		
 		public function removeInfo() : void {
-			data = null;
+			_itemData = null;
 			_setNoItemImage();
 			
-			Text.alpha = 0;
+			_idText.alpha = 0;
 			showColorWheel(false);
-			downloadButton.disable().alpha = 0;
-			if(eyeDropButton) eyeDropButton.disable().alpha = 0;
+			if(_downloadButton) _downloadButton.disable().setAlpha(0);
+			if(_eyeDropperButton) _eyeDropperButton.disable().setAlpha(0);
 		}
 		
 		public function unlockRandomizeButton() : void {
-			if(randomizeLockButton) randomizeLockButton.toggleOff(true);
+			if(_gridManagementWidget) _gridManagementWidget.unlockRandomizeButton();
 		}
 		
 		private function _setNoItemImage() :void {
-			ChangeImage(new $NoItem());
-			this.Image.scaleX = this.Image.scaleY = 0.75;
+			changeImage(new $NoItem());
+			_image.scaleX = _image.scaleY = 0.75;
 		}
 		
-		internal function saveSprite(pEvent:Event) : void
-		{
-			if(!data) { return; }
-			var tName = "Decoration "+data.id;
-			FewfDisplayUtils.saveAsPNG(GameAssets.getItemImage(data), tName, ConstantsApp.ITEM_SAVE_SCALE);
+		private function dispatchEventHandler(pEventName:String) : Function {
+			return function(e):void{ dispatchEvent(new Event(pEventName)); };
+		}
+		
+		private function _saveSprite(pEvent:Event) : void {
+			if(!_itemData) { return; }
+			var tName = "Decoration "+_itemData.id;
+			FewfDisplayUtils.saveAsPNG(GameAssets.getItemImage(_itemData), tName, ConstantsApp.ITEM_SAVE_SCALE);
 		}
 	}
 }

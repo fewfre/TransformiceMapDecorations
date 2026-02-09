@@ -11,16 +11,15 @@ package app.ui.buttons
 		// Storage
 		private var _color : int;
 		
-		public var Width:Number;
-		public var Height:Number;
-		public var originX:Number;
-		public var originY:Number;
+		private var _width : Number;
+		private var _height : Number;
+		private var _originX : Number = 0.5;
+		private var _originY : Number = 0.5;
 		
 		private var _selected : Boolean;
 		private var _borderColor : uint;
 		private var _baseBorderRadius : Number;
 		private var _borderRadius : Number;
-		
 		
 		// Properties
 		public function get color() : int { return _color; }
@@ -29,45 +28,36 @@ package app.ui.buttons
 		public function get hex() : String { return _color.toString(16).toUpperCase(); }
 		public function set hex(pVal:String) : void { setColor(parseInt(pVal, 16)); }
 		
+		public function get Width():Number { return _width; }
+		public function get Height():Number { return _height; }
+		
 		public function get selected() : Boolean { return _selected; }
 		public function set selected(pVal:Boolean) : void { _selected = pVal; _render(); }
 		
 		// Constructor
-		// pData = { color:int, x?:Number, y?:Number,
-		//           width:Number, height:Number, OR size:Number,
-		//           ?origin:Number=0.5, ?originX:Number, ?originY:Number }
-		public function ColorButton(pData:Object) {
+		// If pHeight isn't set it will default to the same as the width
+		public function ColorButton(pColor:*, pWidth:Number, pHeight:Number=NaN) {
+			if(isNaN(pHeight)) pHeight = pWidth;
 			// If string assume it's hex string ("FF00CC") - if not it's an int (0xFF00CC)
-			_color = pData.color is String ? parseInt(pData.color, color) : pData.color;
-			pData.data = _color;
+			_color = pColor is String ? parseInt(pColor, color) : pColor;
 			
-			Width = pData.width != null ? pData.width : pData.size;
-			Height = pData.height != null ? pData.height : pData.size;
-			originX = pData.originX != null ? pData.originX : (pData.origin != null ? pData.origin : 0.5);
-			originY = pData.originY != null ? pData.originY : (pData.origin != null ? pData.origin : 0.5);
+			_width = pWidth;
+			_height = pHeight;
+			_baseBorderRadius = Math.min(_width, _height) / 3;
 			
-			_baseBorderRadius = Math.min(Width, Height) / 3;
-			
-			super(pData);
+			super();
+			_returnData = _color; // Has to be set after super call or else it gets overwritten
 		}
-		
-		public function setColor(color:int) : void {
-			_color = color;
-			_returnData = _color;
-			_render();
-		}
-		
-		// Default dispatch is a bit buggy when `0` is passed, so manually throwing event
-		override public function _dispatch(pEvent:String) : void {
-			dispatchEvent(new FewfEvent(pEvent, _returnData));
-		}
+		public function setOrigin(pX:Number, pY:Object=null) : ColorButton { _originX = pX; _originY = pY != null ? pY as Number : pX; _render(); return this; } // if no originY, then set both to originX value
+		public function resize(pWidth:Number, pHeight:Object = null) : ColorButton { _width = pWidth; _height = pHeight != null ? pHeight as Number : pWidth; _render(); return this; }
+		public function setColor(pColor:int) : ColorButton { _color = pColor; _returnData = _color; _render(); return this; }
 
 		/****************************
 		* Render
 		*****************************/
 		protected function _render() : void {
-			var tX:Number = 0 - (Width * originX);
-			var tY:Number = 0 - (Height * originY);
+			var tX:Number = 0 - (_width * _originX);
+			var tY:Number = 0 - (_height * _originY);
 			var tBorderWidth:Number = _selected ? 2 : 1;
 			var tBorderColor:uint = _selected ? 0xFFFFFF : _borderColor;
 			
@@ -75,20 +65,20 @@ package app.ui.buttons
 			
 			graphics.clear();
 			graphics.beginFill(_color);
-			// Inner border to help add some seperation between color and out border, encase they're to similiar
+			// Inner border to help add some separation between color and out border, encase they're to similar
 			if(_selected) {
 				graphics.lineStyle(tBorderWidth, 0x999999);
-				graphics.drawRoundRect(tX+2, tY+2, Width-4, Height-4, _borderRadius, _borderRadius);
+				graphics.drawRoundRect(tX+2, tY+2, _width-4, _height-4, _borderRadius, _borderRadius);
 				graphics.endFill();
 			}
 			// True outer border
 			graphics.lineStyle(tBorderWidth, tBorderColor);
-			graphics.drawRoundRect(tX+1, tY+1, Width-2, Height-2, _borderRadius, _borderRadius);
+			graphics.drawRoundRect(tX+1, tY+1, _width-2, _height-2, _borderRadius, _borderRadius);
 			graphics.endFill();
 		}
 		
 		override protected function _renderUp() : void {
-			this.scaleX = this.scaleY = 1;
+			this.scale = 1;
 			_borderRadius = _baseBorderRadius;
 			_borderColor = 0x999999;
 			_render();
@@ -99,7 +89,7 @@ package app.ui.buttons
 		}
 		
 		override protected function _renderOver() : void {
-			this.scaleX = this.scaleY = 1.1;
+			this.scale = 1.1;
 			_borderRadius = _baseBorderRadius*1.333;
 			_borderColor = 0x999999;
 			_render();

@@ -36,6 +36,8 @@ package app.ui.panes
 			this.content = new MovieClip();
 			this.contentBack = addItem(new MovieClip()) as MovieClip;
 		}
+		public function on(type:String, listener:Function): TabPane { this.addEventListener(type, listener); return this; }
+		public function off(type:String, listener:Function): TabPane { this.removeEventListener(type, listener); return this; }
 		
 		public function open() : void {
 			_flagOpen = true;
